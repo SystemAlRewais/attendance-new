@@ -15,7 +15,7 @@ function getOrCreateDeviceId() {
     return deviceId;
 }
 
-// جلب حالة الإعدادات من جوجل شيت سحابياً
+// جلب حالة الإعدادات من جوجل شيت سحابياً (معالجة مرنة وشاملة)
 async function fetchAppSettings() {
     try {
         const response = await fetch(sheetDbApiUrl + "?sheet=Settings");
@@ -54,9 +54,13 @@ async function fetchAppSettings() {
     }
 }
 
-// تحديث إعداد معين في الشيت سحابياً
+// تحديث إعداد معين في الشيت سحابياً (مع التخزين المحلي المؤقت للتسميع الفوري)
 async function updateAppSetting(keyName, keyValue) {
     try {
+        let cached = JSON.parse(localStorage.getItem('cachedSettings')) || {};
+        cached[keyName] = String(keyValue);
+        localStorage.setItem('cachedSettings', JSON.stringify(cached));
+
         await fetch(`${sheetDbApiUrl}/key/key/${keyName}?sheet=Settings`, {
             method: 'PUT',
             headers: {
@@ -64,15 +68,16 @@ async function updateAppSetting(keyName, keyValue) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                data: { key: keyName, value: keyValue }
+                data: { key: keyName, value: String(keyValue) }
             })
         });
+        console.log(`Setting ${keyName} updated to ${keyValue}`);
     } catch (error) {
         console.error("Error updating setting:", error);
     }
 }
 
-// إنشاء حساب جديد (تم تبسيطه ليعمل فوراً وبدون أي تعليق)
+// إنشاء حساب جديد
 async function createAccount() {
     const authStatus = document.getElementById('authStatus');
     if(authStatus) {
@@ -116,12 +121,10 @@ async function createAccount() {
         totalViolations: 0  
     };
 
-    // حفظ محلي فوري
     localStorage.setItem(newId, JSON.stringify(userData));
     localStorage.setItem('currentUser', JSON.stringify(userData));
     localStorage.setItem(deviceOwnerKey, newId);
 
-    // رفع البيانات سحابياً لتبويب Students في الخلفية
     try {
         await fetch(sheetDbApiUrl + "?sheet=Students", {
             method: "POST",
@@ -197,20 +200,28 @@ function calculateDistanceInMeters(lat1, lon1, lat2, lon2) {
     return R * c;
 }
 
-// تسجيل الحضور بالـ GPS
+// تسجيل الحضور بالـ GPS مع التحقق السحابي السريع
 async function submitFinalAttendance() {
     const statusMsg = document.getElementById('statusMsg');
     if(!statusMsg) return;
 
     statusMsg.style.color = "blue";
-    statusMsg.textContent = "جاري التحقق من الموقع وتسجيل الحضور...";
+    statusMsg.textContent = "جاري التحقق من حالة المحاضرة...";
+
+    let settings = await fetchAppSettings();
+    if (settings && settings.isAttendanceOpen === 'false') {
+        statusMsg.style.color = "red";
+        statusMsg.textContent = "🔒 الحضور مغلق حالياً من قبل الإدارة!";
+        alert("⚠️ الحضور مغلق حالياً سحابياً من قبل الإدارة!");
+        return;
+    }
 
     const secretCodeEl = document.getElementById('secretCode');
     if (!secretCodeEl) return;
 
     const secretCode = secretCodeEl.value.trim();
     const user = JSON.parse(localStorage.getItem('currentUser'));
-    const subject = localStorage.getItem('selectedSubject') || 'المحاضرة العامة';
+    const subject = settings.currentSubject || localStorage.getItem('selectedSubject') || 'المحاضرة العامة';
 
     if (!user) {
         window.location.href = 'index.html';
