@@ -47,7 +47,7 @@ async function createAccount() {
     const statusEl = document.getElementById('authStatus');
     if(statusEl) {
         statusEl.style.color = "#38bdf8";
-        statusEl.textContent = "⏳ جاري إرسال البيانات وسحبها للشيت...";
+        statusEl.textContent = "⏳ جاري إنشاء الحساب وإرساله للشيت...";
     }
 
     const name = document.getElementById('fullname')?.value.trim();
@@ -72,10 +72,9 @@ async function createAccount() {
     const existingUser = localStorage.getItem('currentUser');
     
     if (existingUser) {
-        // رسالة محفوفة بدون إظهار أي باسوورد بالنص
-        const adminOverride = prompt("🔒 هذا الجهاز مسجل عليه حساب مسبقاً.\nللمساعدة وإنشاء حساب جديد، أدخل كود الإدارة السري:");
+        const adminOverride = prompt("🔒 هذا الجهاز مسجل عليه حساب مسبقاً.\nللمساعدة وإنشاء حساب جديد، أدخل الرقم السري الخاص بالإدارة:");
         if (adminOverride !== "Emoo") {
-            alert("❌ الكود السري غير صحيح!");
+            alert("❌ الرقم السري غير صحيح!");
             if(statusEl) statusEl.textContent = "";
             return;
         }
@@ -95,7 +94,7 @@ async function createAccount() {
     localStorage.setItem(newId, JSON.stringify(userData));
     localStorage.setItem('currentUser', JSON.stringify(userData));
 
-    // الإرسال بتنسيق SheetDB ليظهر فوراً في الصف الثاني بالشيت
+    // الإرسال المباشر لـ SheetDB
     try {
         await fetch(sheetDBUrl, {
             method: 'POST',
@@ -103,9 +102,7 @@ async function createAccount() {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                data: [userData]
-            })
+            body: JSON.stringify({ data: [userData] })
         });
     } catch (e) {
         console.warn("خطأ بالاتصال:", e);
