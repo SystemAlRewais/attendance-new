@@ -51,15 +51,19 @@
 
         // تحميل الحالة الحقيقية من الشيت وتحديث أشكال الأزرار
         async function initAdminButtons() {
-            const settings = await fetchAppSettings();
-            
-            isAttendanceOpenState = (settings.isAttendanceOpen === 'true');
-            isRegistrationOpenState = (settings.isRegistrationOpen === 'true');
+            try {
+                const settings = await fetchAppSettings();
+                
+                isAttendanceOpenState = (settings.isAttendanceOpen === 'true');
+                isRegistrationOpenState = (settings.isRegistrationOpen === 'true');
 
-            updateButtonsUI();
+                updateButtonsUI();
 
-            if (settings.currentSubject) {
-                document.getElementById('adminSubjectInput').value = settings.currentSubject;
+                if (settings.currentSubject) {
+                    document.getElementById('adminSubjectInput').value = settings.currentSubject;
+                }
+            } catch (err) {
+                console.error("Error init buttons:", err);
             }
         }
 
@@ -91,11 +95,11 @@
             attBtn.textContent = "⏳ جاري الإرسال للشيت...";
             
             isAttendanceOpenState = !isAttendanceOpenState;
-            const newValueStr = isAttendanceOpenState ? 'TRUE' : 'FALSE';
+            const newValueStr = isAttendanceOpenState ? 'true' : 'false';
 
             await updateAppSetting('isAttendanceOpen', newValueStr);
             updateButtonsUI();
-            alert(`تم تغيير حالة الحضور في الشيت إلى: ${newValueStr}`);
+            alert(`تم تغيير حالة الحضور في الشيت إلى: ${newValueStr === 'true' ? 'مفتوح' : 'مغلق'}`);
         }
 
         // إرسال أمر إغلاق/فتح التسجيل للشيت
@@ -104,11 +108,11 @@
             regBtn.textContent = "⏳ جاري الإرسال للشيت...";
             
             isRegistrationOpenState = !isRegistrationOpenState;
-            const newValueStr = isRegistrationOpenState ? 'TRUE' : 'FALSE';
+            const newValueStr = isRegistrationOpenState ? 'true' : 'false';
 
             await updateAppSetting('isRegistrationOpen', newValueStr);
             updateButtonsUI();
-            alert(`تم تغيير حالة التسجيل في الشيت إلى: ${newValueStr}`);
+            alert(`تم تغيير حالة التسجيل في الشيت إلى: ${newValueStr === 'true' ? 'مفتوح' : 'مغلق'}`);
         }
 
         // حفظ اسم المادة
