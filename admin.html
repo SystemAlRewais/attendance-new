@@ -13,15 +13,15 @@
 
         <!-- الإعدادات العامة وحالة الأزرار التفاعلية -->
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
-            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">⚙️ إعدادات الجلسة والأمان</h3>
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">⚙️ إعدادات الجلسة والمواد</h3>
             <div class="input-group">
                 <label>عنوان المحاضرة الحالية:</label>
-                <input type="text" id="adminCurrentSubject" placeholder="مثال: المحاضرة الأولى">
+                <input type="text" id="adminCurrentSubject" placeholder="مثال: نشأة وسائل الاتصال">
             </div>
             <button type="button" class="btn" onclick="saveAdminSubject()" style="background: #4f46e5; margin-bottom: 15px;">💾 حفظ عنوان المحاضرة</button>
 
             <div style="margin-bottom: 15px;">
-                <label style="display:block; margin-bottom:5px; font-size:14px; color:var(--text-sub);">حالة بوابة الحضور:</label>
+                <label style="display:block; margin-bottom:5px; font-size:14px; color:var(--text-sub);">حالة بوابة الحضور والتسجيل للمادة الحالية:</label>
                 <div style="display: flex; gap: 10px;">
                     <button type="button" id="btnOpenAttendance" class="btn" onclick="toggleSetting('isAttendanceOpen', 'true')" style="flex:1;">🟢 فتح الحضور</button>
                     <button type="button" id="btnCloseAttendance" class="btn" onclick="toggleSetting('isAttendanceOpen', 'false')" style="flex:1; background: var(--accent-red);">🔴 إغلاق الحضور</button>
@@ -29,10 +29,9 @@
             </div>
 
             <div style="margin-bottom: 15px;">
-                <label style="display:block; margin-bottom:5px; font-size:14px; color:var(--text-sub);">حالة بوابة التسجيل:</label>
                 <div style="display: flex; gap: 10px;">
-                    <button type="button" id="btnOpenReg" class="btn" onclick="toggleSetting('isRegistrationOpen', 'true')" style="flex:1;">🟢 فتح التسجيل</button>
-                    <button type="button" id="btnCloseReg" class="btn" onclick="toggleSetting('isRegistrationOpen', 'false')" style="flex:1; background: var(--accent-red);">🔴 إغلاق التسجيل</button>
+                    <button type="button" id="btnOpenReg" class="btn" onclick="toggleSetting('isRegistrationOpen', 'true')" style="flex:1;">🟢 فتح تسجيل الحسابات</button>
+                    <button type="button" id="btnCloseReg" class="btn" onclick="toggleSetting('isRegistrationOpen', 'false')" style="flex:1; background: var(--accent-red);">🔴 إغلاق تسجيل الحسابات</button>
                 </div>
             </div>
         </div>
@@ -49,10 +48,14 @@
             </div>
         </div>
 
-        <!-- 📁 أرشيف التقارير والسجلات القديمة -->
+        <!-- 📁 أرشيف التقارير والسجلات القديمة مع أزرار التحميل والحذف -->
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
             <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📁 أرشيف المحاضرات والتقارير السابقة</h3>
-            <button type="button" class="btn btn-secondary" onclick="loadArchiveReports()" style="margin-bottom: 10px;">🔄 تحديث الأرشيف</button>
+            <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-secondary" onclick="loadArchiveReports()" style="flex:1;">🔄 تحديث الأرشيف</button>
+                <button type="button" class="btn" onclick="downloadArchive()" style="background: #10b981; flex:1;">📥 تحميل الأرشيف</button>
+                <button type="button" class="btn" onclick="clearArchive()" style="background: var(--accent-red); flex:1;">🗑️ حذف الأرشيف</button>
+            </div>
             <div id="archiveContainer" style="overflow-x: auto; max-height: 200px;">
                 <p style="color: var(--text-sub);">لا توجد تقارير مؤرشفة بعد.</p>
             </div>
@@ -134,14 +137,12 @@
                     }
                 } catch(e) {}
 
-                // تحديث القيمة المطلوبة فقط
                 currentSettings[key] = value;
                 if(key !== 'currentSubject') {
                     const subjectInput = document.getElementById('adminCurrentSubject').value.trim();
                     if(subjectInput) currentSettings.currentSubject = subjectInput;
                 }
 
-                // إعادة كتابة السجل في الشيت بوضوح تام
                 await fetch(`${sheetDBUrl}?sheet=Setting`, { method: 'DELETE', body: JSON.stringify({ query: { id: "*" } }) }).catch(()=>{});
                 
                 await fetch(`${sheetDBUrl}?sheet=Setting`, {
@@ -268,6 +269,41 @@
                 container.innerHTML = html;
             } catch(e) {
                 container.innerHTML = "<p style='color:var(--text-sub);'>الأرشيف فارغ.</p>";
+            }
+        }
+
+        async function downloadArchive() {
+            try {
+                const response = await fetch(`${sheetDBUrl}?sheet=Archive`, { cache: "no-store" });
+                const data = await response.json();
+                if(!Array.isArray(data) || data.length === 0) {
+                    alert("لا توجد بيانات أرشيف لتحميلها.");
+                    return;
+                }
+                let csv = "LectureName,Date,TotalStudents,Details\n";
+                data.forEach(row => {
+                    csv += `"${row.lectureName || ''}","${row.date || ''}","${row.totalStudents || 0}","${(row.details || '').replace(/"/g, '""')}"\n`;
+                });
+                const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Archive_Reports.csv';
+                a.click();
+            } catch(e) {
+                alert("حدث خطأ أثناء تحميل الأرشيف.");
+            }
+        }
+
+        async function clearArchive() {
+            if(confirm("⚠️ هل أنت متأكد من حذف تفريغ الأرشيف بالكامل؟")) {
+                try {
+                    await fetch(`${sheetDBUrl}?sheet=Archive`, { method: 'DELETE', body: JSON.stringify({ query: { lectureName: "*" } }) }).catch(()=>{});
+                    alert("🗑️ تم مسح الأرشيف بنجاح!");
+                    loadArchiveReports();
+                } catch(e) {
+                    alert("❌ حدث خطأ أثناء الحذف.");
+                }
             }
         }
 
