@@ -29,7 +29,7 @@
         <button type="button" class="btn btn-secondary" onclick="goBack()">العودة لاختيار المواد</button>
 
         <hr style="margin-top: 25px; border: 0.5px solid var(--border-color);">
-        <a href="admin.html" style="display: block; margin-top: 15px; font-size: 13px; color: var(--text-sub); text-decoration: none; transition: 0.3s;">🔐 لوحة تحكم الإدارة</a>
+        <a href="admin.html" style="display: block; margin-top: 15px; font-size: 13px; color: var(--text-sub); text-decoration: none;">🔐 لوحة تحكم الإدارة</a>
     </div>
 
     <script src="script.js"></script>
@@ -47,20 +47,24 @@
         }
 
         async function checkLiveAttendanceStatus() {
-            const settings = await fetchAppSettings();
-            if (settings) {
-                const title = settings.currentSubject || "المحاضرة الحالية";
-                document.getElementById('lectureTitleDisplay'].textContent = `📌 ${title}`;
+            try {
+                const settings = await fetchAppSettings();
+                if (settings) {
+                    const title = settings.currentSubject || "المحاضرة الحالية";
+                    document.getElementById('lectureTitleDisplay').textContent = `📌 ${title}`;
 
-                if (settings.isAttendanceOpen !== 'true') {
-                    document.getElementById('attendanceForm').style.display = 'none';
-                    const msgEl = document.getElementById('statusMsg');
-                    msgEl.style.color = 'var(--accent-red)';
-                    msgEl.textContent = '🔒 باب تسجيل الحضور مغلق حالياً من قِبل الإدارة.';
-                } else {
-                    document.getElementById('attendanceForm').style.display = 'block';
-                    document.getElementById('statusMsg').textContent = '';
+                    if (settings.isAttendanceOpen !== 'true') {
+                        document.getElementById('attendanceForm').style.display = 'none';
+                        const msgEl = document.getElementById('statusMsg');
+                        msgEl.style.color = 'var(--accent-red)';
+                        msgEl.textContent = '🔒 باب تسجيل الحضور مغلق حالياً من قِبل الإدارة.';
+                    } else {
+                        document.getElementById('attendanceForm').style.display = 'block';
+                        document.getElementById('statusMsg').textContent = '';
+                    }
                 }
+            } catch(e) {
+                console.error("Error fetching settings:", e);
             }
         }
 
@@ -70,7 +74,6 @@
             window.location.href = 'subjects.html';
         }
 
-        // دالة تسجيل الحضور الشاملة (مع دعم isOutlier والـ GPS)
         async function submitFinalAttendance() {
             const code = document.getElementById('secretCode').value.trim();
             const statusMsg = document.getElementById('statusMsg');
@@ -80,7 +83,7 @@
                 return;
             }
 
-            if (code !== "1234") { // كود المحاضرة الافتراضي أو حسب رغبتك
+            if (code !== "1234") { 
                 alert("❌ الكود السري غير صحيح!");
                 return;
             }
@@ -98,8 +101,6 @@
                 const lon = position.coords.longitude;
                 const locationLink = `https://maps.google.com/?q=${lat},${lon}`;
                 const timeStr = new Date().toLocaleString('ar-EG');
-                
-                // حساب الاستثناء (isOutlier) افتراضياً أو بناءً على إحداثيات الكلية
                 const isOutlier = "false"; 
 
                 statusMsg.textContent = "⏳ جاري إرسال بيانات الحضور للشيت سحابياً...";
