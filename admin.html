@@ -14,7 +14,7 @@
 
         <!-- الإعدادات العامة -->
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
-            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">⚙️ إعدادات الجلسة</h3>
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">⚙️ إعدادات الجلسة والأمان</h3>
             <div class="input-group">
                 <label>عنوان المحاضرة الحالية:</label>
                 <input type="text" id="adminCurrentSubject" placeholder="مثال: المحاضرة الأولى">
@@ -48,7 +48,7 @@
             <div class="input-group"><input type="text" id="manualName" placeholder="اسم الطالب الرباعي"></div>
             <div class="input-group"><input type="text" id="manualPhone" placeholder="رقم الهاتف"></div>
             <div class="input-group">
-                <select id="manualGrade" style="width:1p; width:100%; padding:10px; background:var(--bg-main); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px;">
+                <select id="manualGrade" style="width:100%; padding:10px; background:var(--bg-main); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px;">
                     <option value="الفرقة الأولى">الفرقة الأولى</option>
                     <option value="الفرقة الثانية">الفرقة الثانية</option>
                     <option value="الفرقة الثالثة">الفرقة الثالثة</option>
@@ -59,11 +59,11 @@
             <button type="button" class="btn" onclick="createManualStudent()" style="background: #8b5cf6;">➕ تسجيل الطالب سحابياً</button>
         </div>
 
-        <!-- إدارة الطلاب -->
+        <!-- إدارة الطلاب (تعديل وحذف) -->
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
-            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📋 سجل الطلاب المسجلين</h3>
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📋 سجل الطلاب المسجلين بالكامل</h3>
             <button type="button" class="btn btn-secondary" onclick="loadStudentsList()" style="margin-bottom: 10px;">🔄 تحديث قائمة الطلاب</button>
-            <div id="studentsTableContainer" style="overflow-x: auto; max-height: 300px;">
+            <div id="studentsTableContainer" style="overflow-x: auto; max-height: 350px;">
                 <p style="color: var(--text-sub);">اضغط على تحديث لعرض الطلاب...</p>
             </div>
         </div>
@@ -113,15 +113,18 @@
             statusMsg.textContent = "⏳ جاري التحديث في SheetDB...";
 
             try {
-                await fetch(`${sheetDBUrl}/sheet/Settings`, {
+                let currentSettings = await fetchAppSettings();
+                currentSettings[key] = value;
+
+                await fetch(sheetDBUrl, {
                     method: 'POST',
                     headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data: { [key]: value } })
+                    body: JSON.stringify(currentSettings)
                 });
 
                 statusMsg.style.color = "var(--accent-green)";
-                statusMsg.textContent = `✅ تم تحديث (${key}) بنجاح!`;
-                alert("🎉 تم تحديث الإعدادات بنجاح!");
+                statusMsg.textContent = `✅ تم تحديث (${key}) إلى (${value}) بنجاح!`;
+                alert(`🎉 تم تحديث الإعدادات (الحالة: ${value}) بنجاح!`);
             } catch (e) {
                 console.error(e);
                 statusMsg.style.color = "var(--accent-red)";
@@ -159,25 +162,25 @@
             localStorage.setItem(newId, JSON.stringify(studentData));
 
             try {
-                await fetch(`${sheetDBUrl}/sheet/Students`, {
+                await fetch(sheetDBUrl, {
                     method: 'POST',
                     headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data: [studentData] })
+                    body: JSON.stringify(studentData)
                 });
                 alert(`🎉 تم إضافة الطالب بنجاح!\nالرقم الجامعي: ${newId}`);
                 loadStudentsList();
             } catch(e) {
-                alert("تم الحفظ محلياً فقط، تحقق من الاتصال بالشيت.");
+                alert("تم الحفظ محلياً، تأكد من الاتصال.");
             }
         }
 
         async function loadStudentsList() {
             const container = document.getElementById('studentsTableContainer');
-            container.innerHTML = "جاري جلب الطلاب...";
+            container.innerHTML = "جاري جلب بيانات الطلاب...";
             const students = await fetchAllStudentsFromSheet();
 
             if(!students || students.length === 0) {
-                container.innerHTML = "<p style='color:var(--text-sub);'>لا توجد بيانات طلاب مسجلة حالياً.</p>";
+                container.innerHTML = "<p style='color:var(--text-sub);'>لا توجد بيانات طلاب مسجلة في الشيت حالياً.</p>";
                 return;
             }
 
@@ -190,14 +193,15 @@
                     <th style="padding:8px;">إجراءات</th>
                 </tr>`;
 
-            students.forEach((st, idx) => {
+            students.forEach((st) => {
                 if(st.id) {
                     html += `<tr style="border-bottom:1px solid var(--border-color);">
                         <td style="padding:8px;">${st.id}</td>
                         <td style="padding:8px;">${st.name}</td>
                         <td style="padding:8px;">${st.phone}</td>
                         <td style="padding:8px;">${st.grade}</td>
-                        <td style="padding:8px;">
+                        <td style="padding:8px; display:flex; gap:5px;">
+                            <button onclick="editStudentRow('${st.id}', '${st.name}')" style="background:#38bdf8; color:#000; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">تعديل</button>
                             <button onclick="deleteStudentRow('${st.id}')" style="background:var(--accent-red); color:#fff; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">حذف</button>
                         </td>
                     </tr>`;
@@ -208,14 +212,32 @@
         }
 
         async function deleteStudentRow(studentId) {
-            if(confirm("هل أنت متأكد من حذف هذا الطالب؟")) {
+            if(confirm(`هل أنت متأكد من حذف الطالب ذو الـ ID: ${studentId}؟`)) {
                 try {
+                    // SheetDB DELETE request by column id
                     await fetch(`${sheetDBUrl}/id/${studentId}`, { method: 'DELETE' });
                     localStorage.removeItem(studentId);
                     alert("🗑️ تم الحذف بنجاح!");
                     loadStudentsList();
                 } catch(e) {
                     alert("❌ حدث خطأ أثناء الحذف.");
+                }
+            }
+        }
+
+        async function editStudentRow(studentId, currentName) {
+            const newName = prompt(`تعديل اسم الطالب (ID: ${studentId}):`, currentName);
+            if(newName) {
+                try {
+                    await fetch(`${sheetDBUrl}/id/${studentId}`, {
+                        method: 'PATCH',
+                        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: newName })
+                    });
+                    alert("✏️ تم التعديل بنجاح!");
+                    loadStudentsList();
+                } catch(e) {
+                    alert("❌ حدث خطأ أثناء التعديل.");
                 }
             }
         }
