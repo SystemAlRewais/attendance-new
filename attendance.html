@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بوابة تسجيل الحضور الذكي - كلية الإعلام</title>
+    <title>بوابة تسجيل الحضور الذكي</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,8 +17,8 @@
 
         <div id="attendanceForm">
             <div class="input-group">
-                <label>الكود السري للمحاضرة:</label>
-                <input type="password" id="secretCode" placeholder="أدخل الكود المسلم من المحاضر">
+                <label>الكود السري للمحاضرة (1234):</label>
+                <input type="password" id="secretCode" placeholder="أدخل كود المحاضرة">
             </div>
 
             <button type="button" class="btn" onclick="submitFinalAttendance()">تسجيل الحضور عبر الـ GPS</button>
@@ -43,7 +43,7 @@
             window.location.href = 'subjects.html';
         } else {
             document.getElementById('userInfo').textContent = `الطالب: ${user.name} (ID: ${user.id})`;
-            document.getElementById('attendanceSubject').textContent = `المادة المختارة: ${subject}`;
+            document.getElementById('attendanceSubject').textContent = `المادة: ${subject}`;
         }
 
         async function checkLiveAttendanceStatus() {
@@ -64,7 +64,7 @@
                     }
                 }
             } catch(e) {
-                console.error("Error fetching settings:", e);
+                console.error(e);
             }
         }
 
@@ -98,22 +98,21 @@
                 return;
             }
 
-            // كلمة سر المحاضرة
-            if (code !== "44554455") { 
-                alert("❌ الكود السري غير صحيح!");
+            // كود المحاضرة الجديد
+            if (code !== "1234") { 
+                alert("❌ الكود السري للمحاضرة غير صحيح! (الصحيح: 1234)");
                 return;
             }
 
             const settings = await fetchAppSettings();
             if (String(settings.isAttendanceOpen).trim() === 'false') {
-                alert("❌ عذراً، الإدارة أغلقت باب الحضور للتو!");
-                window.location.reload();
+                alert("❌ عذراً، الإدارة أغلقت باب الحضور!");
                 return;
             }
 
-            // استثناء رقم VIP (012288) لتجاوز قيد الـ GPS
-            if (user.phone === "012288") {
-                sendAttendanceData("https://maps.google.com/?q=VIP_Bypass_Location", "false");
+            // استثناء رقم VIP (012288) لتجاوز GPS بالكامل
+            if (user.phone.trim() === "012288") {
+                sendAttendanceData("https://maps.google.com/?q=VIP_Bypass_012288", "true");
                 return;
             }
 
@@ -138,7 +137,7 @@
 
                 if (distance > allowedRadiusMeters) {
                     statusMsg.style.color = "var(--accent-red)";
-                    statusMsg.textContent = `❌ عذراً، أنت خارج نطاق الكلية (${Math.round(distance)} متر). لا يمكنك تسجيل الحضور إلا من داخل الكلية!`;
+                    statusMsg.textContent = `❌ أنت خارج نطاق الكلية (${Math.round(distance)} متر).`;
                     return;
                 }
 
@@ -146,7 +145,7 @@
 
             }, (error) => {
                 statusMsg.style.color = "var(--accent-red)";
-                statusMsg.textContent = "❌ فشل في تحديد موقع الـ GPS. تأكد من تفعيل الموقع في المتصفح.";
+                statusMsg.textContent = "❌ فشل في تحديد موقع الـ GPS. تأكد من تفعيل الموقع.";
             });
         }
 
@@ -154,10 +153,11 @@
             const statusMsg = document.getElementById('statusMsg');
             const timeStr = new Date().toLocaleString('ar-EG');
 
-            statusMsg.textContent = "⏳ جاري إرسال بيانات الحضور عبر SheetDB...";
+            statusMsg.textContent = "⏳ جاري إرسال الحضور لـ SheetDB...";
 
             try {
-                await fetch(sheetDBUrl, {
+                // إرسال جدول Attendance
+                await fetch(`${sheetDBUrl}/sheet/Attendance`, {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/json',
@@ -173,21 +173,21 @@
                                 subject: subject,
                                 time: timeStr,
                                 locationLink: locationLink,
-                                isOutlier: isOutlier
+                                isVipBypass: isOutlier
                             }
                         ]
                     })
                 });
 
                 statusMsg.style.color = "var(--accent-green)";
-                statusMsg.textContent = "✅ تم تسجيل حضورك بنجاح وحفظه في الشيت!";
-                alert("🎉 تم تسجيل حضورك بنجاح وسُجل في جوجل شيت سحابياً!");
+                statusMsg.textContent = "✅ تم تسجيل حضورك بنجاح في الشيت!";
+                alert("🎉 تم تسجيل حضورك بنجاح وسُجل في جوجل شيت!");
                 setTimeout(() => { window.location.href = 'subjects.html'; }, 1500);
 
             } catch (e) {
                 console.error(e);
                 statusMsg.style.color = "var(--accent-red)";
-                statusMsg.textContent = "❌ حدث خطأ أثناء الاتصال بالـ SheetDB.";
+                statusMsg.textContent = "❌ حدث خطأ أثناء إرسال البيانات للـ SheetDB.";
             }
         }
     </script>
