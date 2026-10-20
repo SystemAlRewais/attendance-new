@@ -1,42 +1,306 @@
-async function updateAdminSettingDirect(key, value) {
-    const statusMsg = document.getElementById('adminStatusMsg');
-    statusMsg.style.color = "#38bdf8";
-    statusMsg.textContent = "⏳ جاري تحديث الحالة في السحابة...";
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم الإدارة الشاملة</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container" style="max-width: 800px;">
+        <div class="admin-badge" style="background: rgba(239, 68, 68, 0.1); color: var(--accent-red);">🔐 لوحة الإدارة العليا</div>
+        <h2>لوحة التحكم والتحكم السحابي</h2>
 
-    try {
-        // جلب الإعدادات الحالية من الشيت الأول لضمان عدم ضياع القيمة الأخرى
-        let currentSettings = { isAttendanceOpen: "true", isRegistrationOpen: "true", currentSubject: document.getElementById('adminCurrentSubject').value || "المحاضرة الأولى" };
-        try {
-            const res = await fetch(`${sheetDBUrl}?sheet=Setting`, { cache: "no-store" });
-            const data = await res.json();
-            if (Array.isArray(data) && data.length > 0) {
-                currentSettings = data[0];
+        <!-- الإعدادات العامة وحالة الأزرار التفاعلية -->
+        <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">⚙️ إعدادات الجلسة والأمان</h3>
+            <div class="input-group">
+                <label>عنوان المحاضرة الحالية:</label>
+                <input type="text" id="adminCurrentSubject" placeholder="مثال: المحاضرة الأولى">
+            </div>
+            <button type="button" class="btn" onclick="saveAdminSubject()" style="background: #4f46e5; margin-bottom: 15px;">💾 حفظ عنوان المحاضرة</button>
+
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px; font-size:14px; color:var(--text-sub);">حالة بوابة الحضور:</label>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" id="btnOpenAttendance" class="btn" onclick="toggleSetting('isAttendanceOpen', 'true')" style="flex:1;">🟢 فتح الحضور</button>
+                    <button type="button" id="btnCloseAttendance" class="btn" onclick="toggleSetting('isAttendanceOpen', 'false')" style="flex:1; background: var(--accent-red);">🔴 إغلاق الحضور</button>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px; font-size:14px; color:var(--text-sub);">حالة بوابة التسجيل:</label>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" id="btnOpenReg" class="btn" onclick="toggleSetting('isRegistrationOpen', 'true')" style="flex:1;">🟢 فتح التسجيل</button>
+                    <button type="button" id="btnCloseReg" class="btn" onclick="toggleSetting('isRegistrationOpen', 'false')" style="flex:1; background: var(--accent-red);">🔴 إغلاق التسجيل</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 📋 قسم سجل حضور المحاضرة الحالية -->
+        <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #10b981;">📊 سجل حضور المحاضرة الحالية</h3>
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <button type="button" class="btn btn-secondary" onclick="loadLiveAttendanceLog()" style="flex:1;">🔄 تحديث السجل</button>
+                <button type="button" class="btn" onclick="endLectureAndExport()" style="background: var(--accent-red); flex:1;">🛑 إنهاء المحاضرة وأرشفة التقرير</button>
+            </div>
+            <div id="liveAttendanceContainer" style="overflow-x: auto; max-height: 250px;">
+                <p style="color: var(--text-sub);">اضغط على تحديث لعرض الحضور...</p>
+            </div>
+        </div>
+
+        <!-- 📁 أرشيف التقارير والسجلات القديمة -->
+        <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📁 أرشيف المحاضرات والتقارير السابقة</h3>
+            <button type="button" class="btn btn-secondary" onclick="loadArchiveReports()" style="margin-bottom: 10px;">🔄 تحديث الأرشيف</button>
+            <div id="archiveContainer" style="overflow-x: auto; max-height: 200px;">
+                <p style="color: var(--text-sub);">لا توجد تقارير مؤرشفة بعد.</p>
+            </div>
+        </div>
+
+        <!-- إدارة الطلاب -->
+        <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📋 سجل الطلاب المسجلين بالكامل</h3>
+            <button type="button" class="btn btn-secondary" onclick="loadStudentsList()" style="margin-bottom: 10px;">🔄 تحديث قائمة الطلاب</button>
+            <div id="studentsTableContainer" style="overflow-x: auto; max-height: 350px;">
+                <p style="color: var(--text-sub);">اضغط على تحديث لعرض الطلاب...</p>
+            </div>
+        </div>
+
+        <p id="adminStatusMsg" class="status-msg"></p>
+        <button type="button" class="btn btn-secondary" onclick="window.location.href='subjects.html'">العودة للمواد</button>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        window.onload = async function() {
+            const pass = prompt("🔐 أدخل الرقم السري الخاص بالإدارة:");
+            if (pass !== "44554455") {
+                alert("❌ الرقم السري غير صحيح!");
+                window.location.href = 'subjects.html';
+                return;
             }
-        } catch(e) {}
 
-        // تحديث المفتاح المطلوب فقط (سواء الحضور أو التسجيل أو العنوان)
-        currentSettings[key] = value;
-        if(key !== 'currentSubject') {
-            currentSettings.currentSubject = document.getElementById('adminCurrentSubject').value || currentSettings.currentSubject;
+            try {
+                const settings = await fetchAppSettings();
+                if(settings) {
+                    if(settings.currentSubject) document.getElementById('adminCurrentSubject').value = settings.currentSubject;
+                    updateUIButtonsState(settings.isAttendanceOpen, settings.isRegistrationOpen);
+                }
+                loadStudentsList();
+                loadLiveAttendanceLog();
+                loadArchiveReports();
+            } catch(e) {
+                console.error(e);
+            }
+        };
+
+        function updateUIButtonsState(isAttOpen, isRegOpen) {
+            const attOpen = String(isAttOpen).trim() === 'true';
+            const regOpen = String(isRegOpen).trim() === 'true';
+
+            document.getElementById('btnOpenAttendance').style.opacity = attOpen ? "1" : "0.3";
+            document.getElementById('btnCloseAttendance').style.opacity = !attOpen ? "1" : "0.3";
+
+            document.getElementById('btnOpenReg').style.opacity = regOpen ? "1" : "0.3";
+            document.getElementById('btnCloseReg').style.opacity = !regOpen ? "1" : "0.3";
         }
 
-        // مسح وإعادة كتابة الإعدادات بالقيم المنفصلة السليمة
-        await fetch(`${sheetDBUrl}?sheet=Setting`, { method: 'DELETE', body: JSON.stringify({ query: { id: "*" } }) }).catch(()=>{});
-        
-        await fetch(`${sheetDBUrl}?sheet=Setting`, {
-            method: 'POST',
-            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data: [currentSettings] })
-        });
+        async function saveAdminSubject() {
+            const subjectVal = document.getElementById('adminCurrentSubject').value.trim();
+            if(!subjectVal) {
+                alert("يرجى كتابة عنوان المحاضرة!");
+                return;
+            }
+            await updateAdminSettingDirect('currentSubject', subjectVal);
+        }
 
-        updateUIButtonsState(currentSettings.isAttendanceOpen, currentSettings.isRegistrationOpen);
+        async function toggleSetting(key, value) {
+            await updateAdminSettingDirect(key, value);
+        }
 
-        statusMsg.style.color = "var(--accent-green)";
-        statusMsg.textContent = `✅ تم تحديث الحالة المطلوبة بنجاح!`;
+        async function updateAdminSettingDirect(key, value) {
+            const statusMsg = document.getElementById('adminStatusMsg');
+            statusMsg.style.color = "#38bdf8";
+            statusMsg.textContent = "⏳ جاري التحديث في السحابة...";
 
-    } catch (e) {
-        console.error(e);
-        statusMsg.style.color = "var(--accent-red)";
-        statusMsg.textContent = "❌ حدث خطأ أثناء التحديث.";
-    }
-}
+            try {
+                let currentSettings = { currentSubject: "المحاضرة الأولى", isAttendanceOpen: "true", isRegistrationOpen: "true" };
+                try {
+                    const res = await fetch(`${sheetDBUrl}?sheet=Setting`, { cache: "no-store" });
+                    const data = await res.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        currentSettings = data[0];
+                    }
+                } catch(e) {}
+
+                // تحديث القيمة المطلوبة فقط
+                currentSettings[key] = value;
+                if(key !== 'currentSubject') {
+                    const subjectInput = document.getElementById('adminCurrentSubject').value.trim();
+                    if(subjectInput) currentSettings.currentSubject = subjectInput;
+                }
+
+                // إعادة كتابة السجل في الشيت بوضوح تام
+                await fetch(`${sheetDBUrl}?sheet=Setting`, { method: 'DELETE', body: JSON.stringify({ query: { id: "*" } }) }).catch(()=>{});
+                
+                await fetch(`${sheetDBUrl}?sheet=Setting`, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: [currentSettings] })
+                });
+
+                updateUIButtonsState(currentSettings.isAttendanceOpen, currentSettings.isRegistrationOpen);
+
+                statusMsg.style.color = "var(--accent-green)";
+                statusMsg.textContent = `✅ تم التحديث بنجاح!`;
+                alert("✔️ تم حفظ وتحديث الإعدادات بنجاح!");
+
+            } catch (e) {
+                console.error(e);
+                statusMsg.style.color = "var(--accent-red)";
+                statusMsg.textContent = "❌ حدث خطأ أثناء الاتصال.";
+            }
+        }
+
+        async function loadLiveAttendanceLog() {
+            const container = document.getElementById('liveAttendanceContainer');
+            container.innerHTML = "جاري جلب سجل حضور المحاضرة...";
+            try {
+                const response = await fetch(`${sheetDBUrl}?sheet=attendance`, { cache: "no-store" });
+                const data = await response.json();
+                if(!Array.isArray(data) || data.length === 0) {
+                    container.innerHTML = "<p style='color:var(--text-sub);'>لا توجد سجلات حضور مسجلة حتى الآن.</p>";
+                    return;
+                }
+
+                let html = `<table style="width:100%; border-collapse:collapse; font-size:13px;">
+                    <tr style="background:rgba(255,255,255,0.05); text-align:right;">
+                        <th style="padding:8px;">اسم الطالب</th>
+                        <th style="padding:8px;">المادة</th>
+                        <th style="padding:8px;">وقت التسجيل</th>
+                        <th style="padding:8px;">الحالة</th>
+                    </tr>`;
+
+                data.forEach((row) => {
+                    if(row.name) {
+                        html += `<tr style="border-bottom:1px solid var(--border-color);">
+                            <td style="padding:8px; font-weight:bold; color:#38bdf8;">${row.name}</td>
+                            <td style="padding:8px;">${row.subject || '-'}</td>
+                            <td style="padding:8px; font-size:11px;">${row.time || '-'}</td>
+                            <td style="padding:8px; color:var(--accent-green);">✔️ مسجل</td>
+                        </tr>`;
+                    }
+                });
+                html += `</table>`;
+                container.innerHTML = html;
+            } catch(e) {
+                container.innerHTML = "<p style='color:var(--accent-red);'>فشل في جلب سجل الحضور.</p>";
+            }
+        }
+
+        async function endLectureAndExport() {
+            if(confirm("🛑 هل أنت متأكد من إنهاء المحاضرة؟ سيتم أرشفة الحضور الحالي وتفريغ السجل.")) {
+                try {
+                    const res = await fetch(`${sheetDBUrl}?sheet=attendance`, { cache: "no-store" });
+                    const currentAttendance = await res.json();
+
+                    if(Array.isArray(currentAttendance) && currentAttendance.length > 0) {
+                        const lectureTitle = document.getElementById('adminCurrentSubject').value || "محاضرة عامة";
+                        const archiveEntry = {
+                            lectureName: lectureTitle,
+                            date: new Date().toLocaleString('ar-EG'),
+                            totalStudents: currentAttendance.length,
+                            details: JSON.stringify(currentAttendance.map(a => a.name))
+                        };
+
+                        await fetch(`${sheetDBUrl}?sheet=Archive`, {
+                            method: 'POST',
+                            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ data: [archiveEntry] })
+                        }).catch(()=>{});
+                    }
+
+                    for(let row of currentAttendance) {
+                        if(row.name) {
+                            await fetch(`${sheetDBUrl}/name/${encodeURIComponent(row.name)}?sheet=attendance`, { method: 'DELETE' }).catch(()=>{});
+                        }
+                    }
+
+                    alert("📊 تم أرشفة التقرير وتفريغ السجل للمحاضرة الجديدة بنجاح!");
+                    loadLiveAttendanceLog();
+                    loadArchiveReports();
+                } catch(e) {
+                    alert("❌ حدث خطأ أثناء الأرشفة.");
+                }
+            }
+        }
+
+        async function loadArchiveReports() {
+            const container = document.getElementById('archiveContainer');
+            try {
+                const response = await fetch(`${sheetDBUrl}?sheet=Archive`, { cache: "no-store" });
+                const data = await response.json();
+                if(!Array.isArray(data) || data.length === 0) {
+                    container.innerHTML = "<p style='color:var(--text-sub);'>لا توجد تقارير مؤرشفة سابقة.</p>";
+                    return;
+                }
+
+                let html = `<table style="width:100%; border-collapse:collapse; font-size:13px;">
+                    <tr style="background:rgba(255,255,255,0.05); text-align:right;">
+                        <th style="padding:8px;">المحاضرة</th>
+                        <th style="padding:8px;">التاريخ</th>
+                        <th style="padding:8px;">العدد</th>
+                        <th style="padding:8px;">الطلاب</th>
+                    </tr>`;
+
+                data.forEach((row) => {
+                    if(row.lectureName) {
+                        html += `<tr style="border-bottom:1px solid var(--border-color);">
+                            <td style="padding:8px; font-weight:bold; color:#38bdf8;">${row.lectureName}</td>
+                            <td style="padding:8px; font-size:11px;">${row.date || '-'}</td>
+                            <td style="padding:8px; color:var(--accent-green);">${row.totalStudents || 0}</td>
+                            <td style="padding:8px; font-size:11px;">${row.details || '-'}</td>
+                        </tr>`;
+                    }
+                });
+                html += `</table>`;
+                container.innerHTML = html;
+            } catch(e) {
+                container.innerHTML = "<p style='color:var(--text-sub);'>الأرشيف فارغ.</p>";
+            }
+        }
+
+        async function loadStudentsList() {
+            const container = document.getElementById('studentsTableContainer');
+            const students = await fetchAllStudentsFromSheet();
+            if(!students || students.length === 0) {
+                container.innerHTML = "<p style='color:var(--text-sub);'>لا توجد طلاب مسجلة.</p>";
+                return;
+            }
+            let html = `<table style="width:100%; border-collapse:collapse; font-size:13px;">
+                <tr style="background:rgba(255,255,255,0.05); text-align:right;">
+                    <th style="padding:8px;">ID</th><th style="padding:8px;">الاسم</th><th style="padding:8px;">الهاتف</th><th style="padding:8px;">إجراءات</th>
+                </tr>`;
+            students.forEach((st) => {
+                if(st.id) {
+                    html += `<tr style="border-bottom:1px solid var(--border-color);">
+                        <td style="padding:8px;">${st.id}</td><td style="padding:8px;">${st.name}</td><td style="padding:8px;">${st.phone}</td>
+                        <td style="padding:8px;"><button onclick="deleteStudentRow('${st.id}')" style="background:var(--accent-red); color:#fff; border:none; padding:3px 6px; border-radius:4px;">حذف</button></td>
+                    </tr>`;
+                }
+            });
+            html += `</table>`;
+            container.innerHTML = html;
+        }
+
+        async function deleteStudentRow(id) {
+            if(confirm("هل أنت متأكد من حذف الطالب؟")) {
+                await fetch(`${sheetDBUrl}/id/${id}?sheet=students`, { method: 'DELETE' }).catch(()=>{});
+                localStorage.removeItem(id);
+                loadStudentsList();
+            }
+        }
+    </script>
+</body>
+</html>
