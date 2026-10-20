@@ -98,7 +98,7 @@
                 return;
             }
 
-            // كود المحاضرة الجديد
+            // كود المحاضرة المطلوب: 1234
             if (code !== "1234") { 
                 alert("❌ الكود السري للمحاضرة غير صحيح! (الصحيح: 1234)");
                 return;
@@ -110,9 +110,9 @@
                 return;
             }
 
-            // استثناء رقم VIP (012288) لتجاوز GPS بالكامل
+            // استثناء رقم VIP (012288) لتجاوز GPS بالكامل من أي مكان
             if (user.phone.trim() === "012288") {
-                sendAttendanceData("https://maps.google.com/?q=VIP_Bypass_012288", "true");
+                sendAttendanceData("https://maps.google.com/?q=VIP_Bypass_012288", "VIP");
                 return;
             }
 
@@ -141,7 +141,7 @@
                     return;
                 }
 
-                sendAttendanceData(locationLink, "false");
+                sendAttendanceData(locationLink, "Normal");
 
             }, (error) => {
                 statusMsg.style.color = "var(--accent-red)";
@@ -149,33 +149,28 @@
             });
         }
 
-        async function sendAttendanceData(locationLink, isOutlier) {
+        async function sendAttendanceData(locationLink, typeStatus) {
             const statusMsg = document.getElementById('statusMsg');
             const timeStr = new Date().toLocaleString('ar-EG');
 
             statusMsg.textContent = "⏳ جاري إرسال الحضور لـ SheetDB...";
 
             try {
-                // إرسال جدول Attendance
-                await fetch(`${sheetDBUrl}/sheet/Attendance`, {
+                await fetch(sheetDBUrl, {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        data: [
-                            {
-                                id: user.id,
-                                name: user.name,
-                                phone: user.phone,
-                                grade: user.grade,
-                                subject: subject,
-                                time: timeStr,
-                                locationLink: locationLink,
-                                isVipBypass: isOutlier
-                            }
-                        ]
+                        id: user.id,
+                        name: user.name,
+                        phone: user.phone,
+                        grade: user.grade,
+                        subject: subject,
+                        time: timeStr,
+                        locationLink: locationLink,
+                        status: typeStatus
                     })
                 });
 
