@@ -1,4 +1,4 @@
-const webAppUrl = "https://script.google.com/macros/s/AKfycbyQToh9a8IglYM0B8RwUpxAGdxWdfbKDr06NaU6PN8ACjuMyyEG8h4bQd2naSbrEYMn6w/exec";
+const webAppUrl = "https://script.google.com/macros/s/AKfycbwVv3Jhc8YGKwvL2FkIGb-sIR14MpfJBKK3YwouS-Y6-l-EtE45Clb11WulEMUCqR9q/exec";
 
 function getOrCreateDeviceId() {
     let deviceId = localStorage.getItem('my_unique_device_id');
@@ -56,7 +56,7 @@ async function createAccount() {
     const statusEl = document.getElementById('authStatus');
     if(statusEl) {
         statusEl.style.color = "#38bdf8";
-        statusEl.textContent = "⏳ جاري إنشاء الحساب والتسجيل سحابياً...";
+        statusEl.textContent = "⏳ جاري التحقق وإنشاء الحساب سحابياً...";
     }
 
     const name = document.getElementById('fullname')?.value.trim();
@@ -77,7 +77,18 @@ async function createAccount() {
         return;
     }
 
-    const deviceId = getOrCreateDeviceId();
+    let deviceId = getOrCreateDeviceId();
+    const existingUser = localStorage.getItem('currentUser');
+    if (existingUser) {
+        const adminOverride = prompt("🔒 هذا الجهاز مسجل عليه حساب مسبقاً.\nلإنشاء حساب جديد على نفس الجهاز، أدخل كلمة سر الإدارة (Emoo):");
+        if (adminOverride !== "Emoo") {
+            alert("❌ كلمة السر غير صحيحة، لا يمكن إنشاء حساب جديد على هذا الجهاز.");
+            if(statusEl) statusEl.textContent = "";
+            return;
+        }
+        deviceId = 'DEV-MULTI-' + Math.random().toString(36).substring(2);
+    }
+
     const newId = generateStudentID();
 
     const userData = {
