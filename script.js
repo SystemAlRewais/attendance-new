@@ -15,7 +15,7 @@ function getOrCreateDeviceId() {
     return deviceId;
 }
 
-// جلب حالة الإعدادات من جوجل شيت سحابياً (معالجة ذكية للحروف الكابيتال والسمول)
+// جلب حالة الإعدادات من جوجل شيت سحابياً
 async function fetchAppSettings() {
     try {
         const response = await fetch(sheetDbApiUrl + "?sheet=Settings");
@@ -66,9 +66,70 @@ async function updateAppSetting(keyName, keyValue) {
     }
 }
 
-// إنشاء حساب جديد مع فحص الحالة سحابياً من الشيت
+// إنشاء حساب جديد مع فحص سريع وسلس
 async function createAccount() {
     const authStatus = document.getElementById('authStatus');
     if(authStatus) {
         authStatus.style.color = "blue";
-        authStatus.textContent = "
+        authStatus.textContent = "جاري إنشاء الحساب...";
+    }
+
+    const currentDeviceId = getOrCreateDeviceId();
+    const deviceOwnerKey = 'device_created_' + currentDeviceId;
+    const hasAccountOnDevice = localStorage.getItem(deviceOwnerKey);
+
+    let isRegOpen = true;
+    try {
+        const settings = await Promise.race([
+            fetchAppSettings(),
+            new Promise((_, reject) => setTimeout(() => reject("Timeout"), 2500))
+        ]);
+        if (settings && settings.isRegistrationOpen === 'false') {
+            isRegOpen = false;
+        }
+    } catch(e) {
+        console.warn("تخطى فحص الإعدادات المؤقت:", e);
+    }
+
+    if (!isRegOpen || hasAccountOnDevice) {
+        if(authStatus) {
+            authStatus.style.color = "red";
+            authStatus.textContent = "❌ تم إنشاء حساب سابقاً من هذا الجهاز أو التسجيل مقفل!";
+        }
+        const adminBypass = prompt("⚠️ عذراً، يوجد حساب تم إنشاؤه من هذا الجهاز من قبل أو أن الإنشاء مقفل.\n\nإذا كنت المسؤول أدخل كلمة السر للمتابعة:");
+        if (adminBypass !== "Emoo") {
+            alert("❌ غير متاح إنشاء حساب جديد من هذا الجهاز!");
+            return;
+        }
+    }
+
+    const nameEl = document.getElementById('fullname');
+    const phoneEl = document.getElementById('phone');
+    const gradeEl = document.getElementById('grade');
+    const passwordEl = document.getElementById('password');
+
+    if (!nameEl || !phoneEl || !gradeEl || !passwordEl) {
+        alert("من فضلك تأكد من إدخال جميع البيانات!");
+        return;
+    }
+
+    const name = nameEl.value.trim();
+    const phone = phoneEl.value.trim();
+    const grade = gradeEl.value;
+    const password = passwordEl.value.trim();
+
+    if (!name || !phone || !grade || !password) {
+        alert("من فضلك أكمل جميع البيانات!");
+        return;
+    }
+
+    const newId = generateStudentID();
+
+    const userData = { 
+        id: newId, 
+        name: name, 
+        phone: phone, 
+        grade: grade, 
+        password: password,
+        boundDeviceId: currentDeviceId,
+        isAdmin:
