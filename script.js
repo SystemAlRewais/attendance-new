@@ -1,4 +1,4 @@
-const sheetDBUrl = "https://sheetdb.io/api/v1/hemw89hh2supw";
+const sheetDBUrl = "https://sheetdb.io/api/v1/g17m6rokcn14s";
 
 function getOrCreateDeviceId() {
     let deviceId = localStorage.getItem('my_unique_device_id');
@@ -72,6 +72,7 @@ async function createAccount() {
     const existingUser = localStorage.getItem('currentUser');
     
     if (existingUser) {
+        // كود المساعدة (Emoo) بدون إظهاره في الرسالة
         const adminOverride = prompt("🔒 هذا الجهاز مسجل عليه حساب مسبقاً.\nللمساعدة وإنشاء حساب جديد، أدخل الرقم السري الخاص بالإدارة:");
         if (adminOverride !== "Emoo") {
             alert("❌ الرقم السري غير صحيح!");
@@ -94,7 +95,7 @@ async function createAccount() {
     localStorage.setItem(newId, JSON.stringify(userData));
     localStorage.setItem('currentUser', JSON.stringify(userData));
 
-    // الإرسال المباشر لـ SheetDB
+    // إرسال البيانات للشيت الجديد
     try {
         await fetch(sheetDBUrl, {
             method: 'POST',
