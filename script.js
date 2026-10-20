@@ -15,7 +15,7 @@ function getOrCreateDeviceId() {
     return deviceId;
 }
 
-// جلب حالة الإعدادات من جوجل شيت سحابياً
+// جلب حالة الإعدادات من جوجل شيت سحابياً (معالجة ذكية لتجنب مشاكل الحروف الكابيتال والسمول)
 async function fetchAppSettings() {
     try {
         const response = await fetch(sheetDbApiUrl + "?sheet=Settings");
@@ -30,8 +30,16 @@ async function fetchAppSettings() {
         if (Array.isArray(settings)) {
             settings.forEach(row => {
                 if (row.key && row.value !== undefined) {
+                    let key = String(row.key).trim();
                     let val = String(row.value).trim().toLowerCase();
-                    settingsObj[row.key] = val;
+                    // تحويل أي صيغة لـ true لو كانت TRUE أو True أو true
+                    if (val === 'true' || val === '1' || val === 'yes' || row.value === true) {
+                        settingsObj[key] = 'true';
+                    } else if (val === 'false' || val === '0' || val === 'no' || row.value === false) {
+                        settingsObj[key] = 'false';
+                    } else {
+                        settingsObj[key] = String(row.value).trim();
+                    }
                 }
             });
         }
@@ -132,4 +140,227 @@ async function createAccount() {
         grade: grade, 
         password: password,
         boundDeviceId: currentDeviceId,
-        isAdmin:
+        isAdmin: false,
+        totalAttendance: 0, 
+        totalViolations: 0  
+    };
+
+    localStorage.setItem(newId, JSON.stringify(userData));
+    localStorage.setItem('currentUser', JSON.stringify(userData));
+    localStorage.setItem(deviceOwnerKey, newId);
+
+    // رفع البيانات سحابياً لتبويب Students
+    fetch(sheetDbApiUrl + "?sheet=Students", {
+        method: "POST",
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            data: [{ id: newId, name: name, phone: phone, grade: grade, password: password }]
+        })
+    }).catch(error => console.error("Error saving student:", error));
+
+    alert(`🎉 تم إنشاء الحساب بنجاح!\n\n🆔 رقمك الجامعي (ID) هو: ${newId}\n🔑 كلمة السر: ${password}\n\n⚠️ احتفظ به جيداً!`);
+    window.location.href = 'subjects.html';
+}
+
+// تسجيل الدخول
+function login() {
+    const idEl = document.getElementById('loginId');
+    const passEl = document.getElementById('loginPassword');
+
+    if (!idEl || !passEl) return;
+
+    const id = idEl.value.trim();
+    const pass = passEl.value.trim();
+
+    if (!id || !pass) {
+        alert("يرجى إدخال الرقم الجامعي وكلمة السر!");
+        return;
+    }
+
+    const savedUser = localStorage.getItem(id);
+    if (!savedUser) {
+        alert("هذا الـ ID غير مسجل على الجهاز!");
+        return;
+    }
+
+    const user = JSON.parse(savedUser);
+
+    if (user.password !== pass) {
+        alert("كلمة السر غير صحيحة!");
+        return;
+    }
+
+    const currentDeviceId = getOrCreateDeviceId();
+    const isUserAdmin = user.isAdmin === true;
+
+    if (!user.boundDeviceId) {
+        user.boundDeviceId = currentDeviceId;
+        localStorage.setItem(user.id, JSON.stringify(user));
+    } else if (user.boundDeviceId !== currentDeviceId) {
+        if (isUserAdmin) {
+            user.boundDeviceId = currentDeviceId;
+            localStorage.setItem(user.id, JSON.stringify(user));
+        } else {
+            const bypass = prompt("⚠️ هذا الحساب مرتبط بجهاز آخر.\n\nإذا كنت الإدارة، أدخل كلمة السر لفتح الحساب:");
+            if (bypass === "Emoo") {
+                user.boundDeviceId = currentDeviceId;
+                localStorage.setItem(user.id, JSON.stringify(user));
+                alert("🔓 تم تخطي قيد الجهاز بنجاح!");
+            } else {
+                alert("❌ خطأ في الأمان: هذا الحساب مرتبط بجهاز آخر!");
+                return;
+            }
+        }
+    }
+
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    window.location.href = 'subjects.html';
+}
+
+// حساب المسافة الجغرافية بالـ GPS
+function calculateDistanceInMeters(lat1, lon1, lat2, lon2) {
+    const R = 6371000;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
+
+// تسجيل الحضور بالـ GPS مع التحقق سحابياً
+async function submitFinalAttendance() {
+    const statusMsg = document.getElementById('statusMsg');
+    if(statusMsg) {
+        statusMsg.style.color = "blue";
+        statusMsg.textContent = "جاري التحقق من حالة المحاضرة سحابياً...";
+    }
+
+    let isAttendanceOpen = true;
+    try {
+        const settings = await Promise.race([
+            fetchAppSettings(),
+            new Promise((_, reject) => setTimeout(() => reject("Timeout"), 2500))
+        ]);
+        if (settings && settings.isAttendanceOpen === 'false') {
+            isAttendanceOpen = false;
+        }
+    } catch(e) {
+        console.warn("تخطى فحص حالة الحضور المؤقت:", e);
+    }
+
+    if (!isAttendanceOpen) {
+        if(statusMsg) {
+            statusMsg.style.color = "red";
+            statusMsg.textContent = "🔒 التسجيل مغلق حالياً سحابياً من قبل الإدارة/الدكتور!";
+        }
+        alert("⚠️ التسجيل مغلق حالياً من قبل الإدارة/الدكتور سحابياً!");
+        return;
+    }
+
+    const secretCodeEl = document.getElementById('secretCode');
+    if (!secretCodeEl || !statusMsg) return;
+
+    const secretCode = secretCodeEl.value.trim();
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    const subject = localStorage.getItem('selectedSubject') || 'المحاضرة العامة';
+
+    if (!user) {
+        window.location.href = 'index.html';
+        return;
+    }
+
+    const correctCode = "1234";
+    const bypassCode = "012288"; 
+
+    if (secretCode !== correctCode && secretCode !== bypassCode) {
+        statusMsg.style.color = "red";
+        statusMsg.textContent = "الكود السري للمحاضرة غير صحيح!";
+        return;
+    }
+
+    function executeRegistration(lat, lon, isOutlier) {
+        const time = new Date().toLocaleString('ar-EG');
+        const mapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
+
+        fetch(sheetDbApiUrl + "?sheet=Attendance", {
+            method: "POST",
+            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                data: [{
+                    id: user.id,
+                    name: user.name,
+                    phone: user.phone,
+                    grade: user.grade,
+                    subject: subject,
+                    time: time,
+                    locationLink: mapsUrl,
+                    isOutlier: isOutlier ? "نعم" : "لا"
+                }]
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Attendance saved:", data);
+            statusMsg.style.color = "green";
+            statusMsg.textContent = `تم تسجيل حضورك بنجاح يا ${user.name} في (${subject})!`;
+            
+            // حفظ الحضور محلياً لظهوره في كشف الأدمن
+            let records = JSON.parse(localStorage.getItem('allAttendanceRecords')) || [];
+            records.push({
+                id: user.id,
+                name: user.name,
+                phone: user.phone,
+                grade: user.grade,
+                subject: subject,
+                time: time,
+                locationLink: mapsUrl,
+                isOutlier: isOutlier
+            });
+            localStorage.setItem('allAttendanceRecords', JSON.stringify(records));
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            statusMsg.style.color = "red";
+            statusMsg.textContent = "حدث خطأ أثناء الاتصال بالقاعدة السحابية.";
+        });
+    }
+
+    if (secretCode === bypassCode) {
+        statusMsg.style.color = "purple";
+        statusMsg.textContent = "🚀 تم تفعيل وضع الاستثناء، جاري التسجيل بنجاح...";
+        setTimeout(() => { executeRegistration(30.0565, 31.3175, false); }, 800);
+        return;
+    }
+
+    statusMsg.style.color = "blue";
+    statusMsg.textContent = "جاري التقاط الموقع الجغرافي (GPS)...";
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                const distance = calculateDistanceInMeters(lat, lon, 30.0565, 31.3175);
+                const isOutlier = distance > 300;
+
+                if (isOutlier) {
+                    statusMsg.style.color = "red";
+                    statusMsg.textContent = "❌ أنت خارج النطاق الجغرافي المسموح (300 متر)!";
+                    return;
+                }
+
+                executeRegistration(lat, lon, false);
+            },
+            () => {
+                statusMsg.style.color = "red";
+                statusMsg.textContent = "❌ فشل تحديد الموقع. تأكد من تفعيل الـ GPS.";
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
+    } else {
+        statusMsg.style.color = "red";
+        statusMsg.textContent = "متصفحك لا يدعم تحديد الموقع.";
+    }
+}
