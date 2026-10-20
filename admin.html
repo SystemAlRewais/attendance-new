@@ -3,31 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم الإدارة - نظام الحضور</title>
+    <title>لوحة تحكم الإدارة الشاملة</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container" style="max-width: 600px;">
+    <div class="container" style="max-width: 800px;">
         <div class="admin-badge" style="background: rgba(239, 68, 68, 0.1); color: var(--accent-red);">🔐 لوحة الإدارة العليا</div>
-        <h2>تحكم النظام</h2>
-        <p style="color: var(--text-sub); font-size: 14px; margin-bottom: 20px;">التحكم اللحظي في حالة التسجيل، الحضور، وتغيير المحاضرة الحالية.</p>
+        <h2>لوحة التحكم والتحكم السحابي</h2>
+        <p style="color: var(--text-sub); font-size: 14px; margin-bottom: 20px;">التحكم الكامل في الحضور، التسجيل، المواد، وإدارة بيانات الطلاب.</p>
 
-        <div class="input-group">
-            <label>عنوان المحاضرة الحالية:</label>
-            <input type="text" id="adminCurrentSubject" placeholder="مثال: المحاضرة الأولى - مقدمة في الإعلام">
+        <!-- الإعدادات العامة -->
+        <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">⚙️ إعدادات الجلسة</h3>
+            <div class="input-group">
+                <label>عنوان المحاضرة الحالية:</label>
+                <input type="text" id="adminCurrentSubject" placeholder="مثال: المحاضرة الأولى">
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                <button type="button" class="btn" onclick="toggleSetting('isAttendanceOpen', 'true')" style="background: var(--accent-green); flex:1;">فتح الحضور</button>
+                <button type="button" class="btn" onclick="toggleSetting('isAttendanceOpen', 'false')" style="background: var(--accent-red); flex:1;">إغلاق الحضور</button>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                <button type="button" class="btn" onclick="toggleSetting('isRegistrationOpen', 'true')" style="background: var(--accent-green); flex:1;">فتح التسجيل</button>
+                <button type="button" class="btn" onclick="toggleSetting('isRegistrationOpen', 'false')" style="background: var(--accent-red); flex:1;">إغلاق التسجيل</button>
+            </div>
+
+            <button type="button" class="btn" onclick="saveAdminSettings()" style="background: #4f46e5;">💾 حفظ وتحديث الإعدادات</button>
         </div>
 
-        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-            <button type="button" class="btn" onclick="toggleSetting('isAttendanceOpen', 'true')" style="background: var(--accent-green);">فتح الحضور</button>
-            <button type="button" class="btn" onclick="toggleSetting('isAttendanceOpen', 'false')" style="background: var(--accent-red);">إغلاق الحضور</button>
+        <!-- إضافة مادة جديدة -->
+        <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📚 إضافة مادة دراسية جديدة</h3>
+            <div class="input-group">
+                <input type="text" id="newSubjectName" placeholder="اسم المادة الدراسية الجديد">
+            </div>
+            <button type="button" class="btn" onclick="addNewSubject()" style="background: #10b981;">➕ إضافة المادة للقائمة</button>
         </div>
 
-        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-            <button type="button" class="btn" onclick="toggleSetting('isRegistrationOpen', 'true')" style="background: var(--accent-green);">فتح التسجيل</button>
-            <button type="button" class="btn" onclick="toggleSetting('isRegistrationOpen', 'false')" style="background: var(--accent-red);">إغلاق التسجيل</button>
+        <!-- إنشاء حساب طالب يدوي -->
+        <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">👤 إنشاء حساب طالب (يدوي)</h3>
+            <div class="input-group"><input type="text" id="manualName" placeholder="اسم الطالب الرباعي"></div>
+            <div class="input-group"><input type="text" id="manualPhone" placeholder="رقم الهاتف"></div>
+            <div class="input-group">
+                <select id="manualGrade" style="width:1p; width:100%; padding:10px; background:var(--bg-main); color:var(--text-main); border:1px solid var(--border-color); border-radius:8px;">
+                    <option value="الفرقة الأولى">الفرقة الأولى</option>
+                    <option value="الفرقة الثانية">الفرقة الثانية</option>
+                    <option value="الفرقة الثالثة">الفرقة الثالثة</option>
+                    <option value="الفرقة الرابعة">الفرقة الرابعة</option>
+                </select>
+            </div>
+            <div class="input-group"><input type="text" id="manualPassword" placeholder="كلمة السر"></div>
+            <button type="button" class="btn" onclick="createManualStudent()" style="background: #8b5cf6;">➕ تسجيل الطالب سحابياً</button>
         </div>
 
-        <button type="button" class="btn" onclick="saveAdminSettings()" style="background: #4f46e5; margin-bottom: 15px;">💾 حفظ وتحديث الإعدادات سحابياً</button>
+        <!-- إدارة الطلاب -->
+        <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📋 سجل الطلاب المسجلين</h3>
+            <button type="button" class="btn btn-secondary" onclick="loadStudentsList()" style="margin-bottom: 10px;">🔄 تحديث قائمة الطلاب</button>
+            <div id="studentsTableContainer" style="overflow-x: auto; max-height: 300px;">
+                <p style="color: var(--text-sub);">اضغط على تحديث لعرض الطلاب...</p>
+            </div>
+        </div>
 
         <p id="adminStatusMsg" class="status-msg"></p>
 
@@ -36,11 +75,10 @@
 
     <script src="script.js"></script>
     <script>
-        // حماية صفحة الإدارة بكلمة السر Emoo
         window.onload = async function() {
-            const pass = prompt("🔐 أدخل كلمة سر الإدارة (Emoo) للدخول للوحة التحكم:");
-            if (pass !== "Emoo") {
-                alert("❌ كلمة السر غير صحيحة!");
+            const pass = prompt("🔐 أدخل الرقم السري للإدارة (44554455):");
+            if (pass !== "44554455") {
+                alert("❌ الرقم السري خطأ!");
                 window.location.href = 'subjects.html';
                 return;
             }
@@ -50,6 +88,7 @@
                 if(settings && settings.currentSubject) {
                     document.getElementById('adminCurrentSubject').value = settings.currentSubject;
                 }
+                loadStudentsList();
             } catch(e) {
                 console.error(e);
             }
@@ -71,31 +110,113 @@
         async function updateAdminSettingDirect(key, value) {
             const statusMsg = document.getElementById('adminStatusMsg');
             statusMsg.style.color = "#38bdf8";
-            statusMsg.textContent = "⏳ جاري التحديث عبر SheetDB...";
+            statusMsg.textContent = "⏳ جاري التحديث في SheetDB...";
 
             try {
-                await fetch(sheetDBUrl, {
+                await fetch(`${sheetDBUrl}/sheet/Settings`, {
                     method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        data: [
-                            {
-                                [key]: value
-                            }
-                        ]
-                    })
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: { [key]: value } })
                 });
 
                 statusMsg.style.color = "var(--accent-green)";
-                statusMsg.textContent = `✅ تم تحديث (${key}) إلى (${value}) بنجاح!`;
-                alert(`🎉 تم تحديث الإعدادات بنجاح!`);
+                statusMsg.textContent = `✅ تم تحديث (${key}) بنجاح!`;
+                alert("🎉 تم تحديث الإعدادات بنجاح!");
             } catch (e) {
                 console.error(e);
                 statusMsg.style.color = "var(--accent-red)";
                 statusMsg.textContent = "❌ حدث خطأ أثناء التحديث.";
+            }
+        }
+
+        async function addNewSubject() {
+            const subName = document.getElementById('newSubjectName').value.trim();
+            if(!subName) {
+                alert("ادخل اسم المادة!");
+                return;
+            }
+            let subjects = JSON.parse(localStorage.getItem('custom_subjects') || '[]');
+            subjects.push(subName);
+            localStorage.setItem('custom_subjects', JSON.stringify(subjects));
+            alert(`✅ تمت إضافة المادة (${subName}) بنجاح!`);
+            document.getElementById('newSubjectName').value = '';
+        }
+
+        async function createManualStudent() {
+            const name = document.getElementById('manualName').value.trim();
+            const phone = document.getElementById('manualPhone').value.trim();
+            const grade = document.getElementById('manualGrade').value;
+            const password = document.getElementById('manualPassword').value.trim();
+
+            if(!name || !phone || !password) {
+                alert("املأ جميع بيانات الطالب!");
+                return;
+            }
+
+            const newId = 'AZ' + Math.floor(100000 + Math.random() * 900000);
+            const studentData = { id: newId, name, phone, grade, password, boundDeviceId: 'DEV-MANUAL' };
+
+            localStorage.setItem(newId, JSON.stringify(studentData));
+
+            try {
+                await fetch(`${sheetDBUrl}/sheet/Students`, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: [studentData] })
+                });
+                alert(`🎉 تم إضافة الطالب بنجاح!\nالرقم الجامعي: ${newId}`);
+                loadStudentsList();
+            } catch(e) {
+                alert("تم الحفظ محلياً فقط، تحقق من الاتصال بالشيت.");
+            }
+        }
+
+        async function loadStudentsList() {
+            const container = document.getElementById('studentsTableContainer');
+            container.innerHTML = "جاري جلب الطلاب...";
+            const students = await fetchAllStudentsFromSheet();
+
+            if(!students || students.length === 0) {
+                container.innerHTML = "<p style='color:var(--text-sub);'>لا توجد بيانات طلاب مسجلة حالياً.</p>";
+                return;
+            }
+
+            let html = `<table style="width:100%; border-collapse:collapse; font-size:13px;">
+                <tr style="background:rgba(255,255,255,0.05); text-align:right;">
+                    <th style="padding:8px;">ID</th>
+                    <th style="padding:8px;">الاسم</th>
+                    <th style="padding:8px;">الهاتف</th>
+                    <th style="padding:8px;">الفرقة</th>
+                    <th style="padding:8px;">إجراءات</th>
+                </tr>`;
+
+            students.forEach((st, idx) => {
+                if(st.id) {
+                    html += `<tr style="border-bottom:1px solid var(--border-color);">
+                        <td style="padding:8px;">${st.id}</td>
+                        <td style="padding:8px;">${st.name}</td>
+                        <td style="padding:8px;">${st.phone}</td>
+                        <td style="padding:8px;">${st.grade}</td>
+                        <td style="padding:8px;">
+                            <button onclick="deleteStudentRow('${st.id}')" style="background:var(--accent-red); color:#fff; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">حذف</button>
+                        </td>
+                    </tr>`;
+                }
+            });
+            html += `</table>`;
+            container.innerHTML = html;
+        }
+
+        async function deleteStudentRow(studentId) {
+            if(confirm("هل أنت متأكد من حذف هذا الطالب؟")) {
+                try {
+                    await fetch(`${sheetDBUrl}/id/${studentId}`, { method: 'DELETE' });
+                    localStorage.removeItem(studentId);
+                    alert("🗑️ تم الحذف بنجاح!");
+                    loadStudentsList();
+                } catch(e) {
+                    alert("❌ حدث خطأ أثناء الحذف.");
+                }
             }
         }
     </script>
