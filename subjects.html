@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة كلية الإعلام - جامعة الأزهر</title>
+    <title>منصة المواد والمحاضرات - كلية الإعلام</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h2>منصة المواد والمحاضرات</h2>
-        <p id="userInfo" style="color: #007bff; font-weight: bold; margin-bottom: 15px;"></p>
+        <div class="admin-badge" style="background: rgba(79, 70, 229, 0.1); color: #818cf8;">🎓 منصة الطلاب الأكاديمية</div>
+        <h2>اختر المادة الدراسية</h2>
+        <p id="userInfo" style="color: var(--text-main); font-weight: 700; margin-bottom: 20px;"></p>
 
         <div class="input-group">
             <label>اختر الفرقة الدراسية:</label>
             <select id="selectGrade" onchange="loadSubjects()">
-                <option value="">-- اختر الفرقة --</option>
+                <option value="">-- اختر الفرقة الدراسية --</option>
                 <option value="1">الفرقة الأولى</option>
                 <option value="2">الفرقة الثانية</option>
                 <option value="3">الفرقة الثالثة</option>
@@ -29,8 +30,11 @@
             </select>
         </div>
 
-        <button type="button" onclick="goToAttendance()">متابعة لتسجيل الحضور بالـ GPS</button>
-        <button type="button" onclick="logout()" style="background-color: #dc3545; margin-top: 10px;">تسجيل الخروج</button>
+        <button type="button" class="btn" onclick="goToAttendance()">متابعة لتسجيل الحضور بالـ GPS</button>
+        <button type="button" class="btn btn-secondary" onclick="logout()" style="background-color: transparent; border-color: var(--accent-red); color: var(--accent-red);">تسجيل الخروج</button>
+        
+        <hr style="margin-top: 25px; border: 0.5px solid var(--border-color);">
+        <a href="admin.html" style="display: block; margin-top: 15px; font-size: 13px; color: var(--text-sub); text-decoration: none;">🔐 لوحة تحكم الإدارة</a>
     </div>
 
     <script src="script.js"></script>
@@ -39,7 +43,7 @@
         if(!user) { 
             window.location.href = 'index.html'; 
         } else { 
-            document.getElementById('userInfo').textContent = `طالب: ${user.name} | الرقم الجامعي: ${user.id}`; 
+            document.getElementById('userInfo').textContent = `👤 طالب: ${user.name} | ID: ${user.id}`; 
         }
 
         function loadSubjects() {
@@ -54,6 +58,12 @@
 
             if(grade === "1") {
                 subjectSelect.innerHTML += '<option value="نشأة وسائل الاتصال - د. مصطفى مندي">نشأة وسائل الاتصال - د. مصطفى مندي</option>';
+            } else if(grade === "2") {
+                subjectSelect.innerHTML += '<option value="رأي عام وإعلام - دكتور المادة">رأي عام وإعلام - دكتور المادة</option>';
+            } else if(grade === "3") {
+                subjectSelect.innerHTML += '<option value="صحافة استقصائية - دكتور المادة">صحافة استقصائية - دكتور المادة</option>';
+            } else if(grade === "4") {
+                subjectSelect.innerHTML += '<option value="مشروع التخرج - الإدارة">مشروع التخرج - الإدارة</option>';
             }
 
             const customSubjects = JSON.parse(localStorage.getItem('customSubjects')) || [];
