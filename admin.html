@@ -141,26 +141,47 @@
         async function updateAdminSettingDirect(key, value) {
             const statusMsg = document.getElementById('adminStatusMsg');
             statusMsg.style.color = "#38bdf8";
-            statusMsg.textContent = "⏳ جاري التحديث في SheetDB...";
+            statusMsg.textContent = "⏳ جاري تنفيذ الأمر في السحابة...";
 
             try {
-                let currentSettings = await fetchAppSettings();
-                currentSettings[key] = value;
+                let currentSettings = {};
+                try {
+                    const res = await fetch(`${sheetDBUrl}?sheet=Setting`, { cache: "no-store" });
+                    const data = await res.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        currentSettings = data[0];
+                    }
+                } catch(e) {}
 
-                await fetch(`${sheetDBUrl}?sheet=Setting`, {
-                    method: 'POST',
+                currentSettings[key] = value;
+                if(!currentSettings.currentSubject) currentSettings.currentSubject = document.getElementById('adminCurrentSubject').value || "المحاضرة الأولى";
+                if(currentSettings.isAttendanceOpen === undefined) currentSettings.isAttendanceOpen = "true";
+                if(currentSettings.isRegistrationOpen === undefined) currentSettings.isRegistrationOpen = "true";
+
+                const response = await fetch(`${sheetDBUrl}/id/1?sheet=Setting`, {
+                    method: 'PUT',
                     headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data: [currentSettings] })
+                    body: JSON.stringify(currentSettings)
                 });
+
+                if (!response.ok) {
+                    await fetch(`${sheetDBUrl}?sheet=Setting`, {
+                        method: 'POST',
+                        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ data: [currentSettings] })
+                    });
+                }
 
                 updateUIButtonsState(currentSettings.isAttendanceOpen, currentSettings.isRegistrationOpen);
 
                 statusMsg.style.color = "var(--accent-green)";
-                statusMsg.textContent = `✅ تم تحديث الحالة بنجاح!`;
+                statusMsg.textContent = `✅ تم تنفيذ الأمر بنجاح وتحديث النظام!`;
+                alert("✔️ تم تحديث الحالة في السحابة بنجاح!");
+
             } catch (e) {
                 console.error(e);
                 statusMsg.style.color = "var(--accent-red)";
-                statusMsg.textContent = "❌ حدث خطأ أثناء التحديث.";
+                statusMsg.textContent = "❌ حدث خطأ أثناء الاتصال بالسحابة.";
             }
         }
 
