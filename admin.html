@@ -7,20 +7,18 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container" style="max-width: 540px;">
+    <div class="container" style="max-width: 650px;">
         <div class="admin-badge">⚡ لوحة الإدارة العليا</div>
         <h2>إدارة النظام السحابي</h2>
-        <p id="adminWelcome">تحكم لحظي في الحالة الأكاديمية وصلاحيات الطلاب</p>
+        <p id="adminWelcome">تحكم لحظي في الحالة الأكاديمية وقاعدة البيانات</p>
 
         <div class="card">
             <h3>🔘 حالة بوابات النظام (سحابياً)</h3>
-            <p>التغيير ينعكس فوراً عند جميع الطلاب:</p>
-            
-            <button id="toggleAttendanceBtn" class="btn" style="background-color: #10b981; margin-bottom: 15px; font-weight: bold; padding: 14px;" onclick="handleToggleAttendance()">
+            <button id="toggleAttendanceBtn" class="btn" style="background-color: #10b981; margin-bottom: 12px; font-weight: bold; padding: 12px;" onclick="handleToggleAttendance()">
                 🔄 جاري جلب حالة الحضور...
             </button>
 
-            <button id="toggleRegistrationBtn" class="btn" style="background-color: #10b981; margin-bottom: 15px; font-weight: bold; padding: 14px;" onclick="handleToggleRegistration()">
+            <button id="toggleRegistrationBtn" class="btn" style="background-color: #10b981; margin-bottom: 12px; font-weight: bold; padding: 12px;" onclick="handleToggleRegistration()">
                 🔄 جاري جلب حالة التسجيل...
             </button>
         </div>
@@ -31,6 +29,22 @@
                 <input type="text" id="adminSubjectInput" placeholder="أدخل اسم المحاضرة النشطة حالياً">
             </div>
             <button class="btn" onclick="saveSubject()">تحديث اسم المادة سحابياً</button>
+        </div>
+
+        <div class="card">
+            <h3>👥 قاعدة بيانات الطلاب المسجلين سحابياً</h3>
+            <button class="btn" style="background-color: #0ea5e9; margin-bottom: 12px;" onclick="loadStudentsTable()">🔄 تحميل/تحديث جدول الطلاب</button>
+            <div style="max-height: 250px; overflow-y: auto;">
+                <table id="studentsTable">
+                    <tr>
+                        <th>ID</th>
+                        <th>الاسم</th>
+                        <th>الهاتف</th>
+                        <th>الفرقة</th>
+                        <th>الباسورد</th>
+                    </tr>
+                </table>
+            </div>
         </div>
 
         <button class="btn btn-secondary" onclick="window.location.href='subjects.html'">العودة لمنصة المواد</button>
@@ -49,13 +63,14 @@
                 return;
             }
             await initAdminButtons();
+            await loadStudentsTable();
         };
 
         async function initAdminButtons() {
             try {
                 const settings = await fetchAppSettings();
-                isAttendanceOpenState = (settings.isAttendanceOpen === 'true');
-                isRegistrationOpenState = (settings.isRegistrationOpen === 'true');
+                isAttendanceOpenState = (String(settings.isAttendanceOpen).trim() === 'true');
+                isRegistrationOpenState = (String(settings.isRegistrationOpen).trim() === 'true');
                 updateButtonsUI();
 
                 if (settings.currentSubject) {
@@ -88,27 +103,19 @@
         }
 
         async function handleToggleAttendance() {
-            const attBtn = document.getElementById('toggleAttendanceBtn');
-            attBtn.textContent = "⏳ جاري التحديث السحابي...";
-            
             isAttendanceOpenState = !isAttendanceOpenState;
             const newValueStr = isAttendanceOpenState ? 'true' : 'false';
-
             await updateAppSetting('isAttendanceOpen', newValueStr);
             updateButtonsUI();
-            alert(`تم تحديث حالة الحضور سحابياً إلى: ${newValueStr === 'true' ? 'مفتوح' : 'مغلق'}`);
+            alert(`تم تغيير حالة الحضور إلى: ${newValueStr === 'true' ? 'مفتوح' : 'مغلق'}`);
         }
 
         async function handleToggleRegistration() {
-            const regBtn = document.getElementById('toggleRegistrationBtn');
-            regBtn.textContent = "⏳ جاري التحديث السحابي...";
-            
             isRegistrationOpenState = !isRegistrationOpenState;
             const newValueStr = isRegistrationOpenState ? 'true' : 'false';
-
             await updateAppSetting('isRegistrationOpen', newValueStr);
             updateButtonsUI();
-            alert(`تم تحديث حالة التسجيل سحابياً إلى: ${newValueStr === 'true' ? 'مفتوح' : 'مغلق'}`);
+            alert(`تم تغيير حالة التسجيل إلى: ${newValueStr === 'true' ? 'مفتوح' : 'مغلق'}`);
         }
 
         async function saveSubject() {
@@ -118,7 +125,30 @@
                 return;
             }
             await updateAppSetting('currentSubject', subVal);
-            alert("تم تحديث اسم المحاضرة في الشيت بنجاح!");
+            alert("تم تحديث اسم المحاضرة بنجاح!");
+        }
+
+        async function loadStudentsTable() {
+            const table = document.getElementById('studentsTable');
+            table.innerHTML = `<tr><th>ID</th><th>الاسم</th><th>الهاتف</th><th>الفرقة</th><th>الباسورد</th></tr>`;
+            
+            const rows = await fetchAllStudents();
+            if (rows && rows.length > 1) {
+                for (let i = 1; i < rows.length; i++) {
+                    const r = rows[i];
+                    if(r[0]) {
+                        table.innerHTML += `<tr>
+                            <td>${r[0]}</td>
+                            <td>${r[1]}</td>
+                            <td>${r[2]}</td>
+                            <td>${r[3]}</td>
+                            <td>${r[4]}</td>
+                        </tr>`;
+                    }
+                }
+            } else {
+                table.innerHTML += `<tr><td colspan="5">لا توجد بيانات طلاب مسجلة بعد</td></tr>`;
+            }
         }
     </script>
 </body>
