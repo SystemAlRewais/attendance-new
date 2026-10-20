@@ -18,9 +18,9 @@
         <div id="attendanceForm">
             <div class="input-group">
                 <label>الكود السري للمحاضرة:</label>
-            <!-- التعديل الظاهر للطالب (بدون ما يغشش الكود) -->
-<input type="password" id="secretCode" placeholder="أدخل كود المحاضرة السري">
-
+                <!-- التعديل الظاهر للطالب (بدون ما يغشش الكود) -->
+                <input type="password" id="secretCode" placeholder="أدخل كود المحاضرة السري">
+            </div>
 
             <button type="button" class="btn" onclick="submitFinalAttendance()">تسجيل الحضور الآن</button>
         </div>
@@ -142,8 +142,9 @@
                 const lon = position.coords.longitude;
                 const locationLink = `https://maps.google.com/?q=${lat},${lon}`;
 
-                const collegeLat = 30.0444; 
-                const collegeLon = 31.2357; 
+                // إحداثيات كلية الإعلام جامعة الأزهر بمدينة نصر الدقيقة
+                const collegeLat = 30.0568; 
+                const collegeLon = 31.3145; 
                 const allowedRadiusMeters = 300; 
 
                 const distance = calculateDistance(lat, lon, collegeLat, collegeLon);
