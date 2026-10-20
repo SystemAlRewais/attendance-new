@@ -13,7 +13,7 @@ function generateStudentID() {
     return 'AZ' + Math.floor(100000 + Math.random() * 900000);
 }
 
-// جلب الإعدادات من تبويب Setting
+// جلب الإعدادات من صفحة Setting
 async function fetchAppSettings() {
     try {
         const response = await fetch(`${sheetDBUrl}?sheet=Setting`, { cache: "no-store" });
@@ -29,7 +29,7 @@ async function fetchAppSettings() {
     }
 }
 
-// جلب الطلاب من تبويب students
+// جلب الطلاب من صفحة students
 async function fetchAllStudentsFromSheet() {
     try {
         const response = await fetch(`${sheetDBUrl}?sheet=students`, { cache: "no-store" });
@@ -94,7 +94,7 @@ async function createAccount() {
     localStorage.setItem(newId, JSON.stringify(userData));
     localStorage.setItem('currentUser', JSON.stringify(userData));
 
-    // إرسال البيانات لصفحة students
+    // إرسال البيانات لصفحة students في الشيت
     try {
         await fetch(`${sheetDBUrl}?sheet=students`, {
             method: 'POST',
