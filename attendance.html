@@ -17,7 +17,7 @@
 
         <div id="attendanceForm">
             <div class="input-group">
-                <label>الكود السري للمحاضرة:</label>
+                <label>الكود السري للمحاضرة (1234):</label>
                 <input type="password" id="secretCode" placeholder="أدخل كود المحاضرة">
             </div>
 
@@ -98,7 +98,7 @@
                 return;
             }
 
-            // كود المحاضرة السري: 1234
+            // كود المحاضرة: 1234
             if (code !== "1234") { 
                 alert("❌ الكود السري للمحاضرة غير صحيح!");
                 return;
@@ -110,16 +110,16 @@
                 return;
             }
 
-            // استثناء رقم الهاتف VIP (012288) لتجاوز GPS فوراً
+            // استثناء رقم الاستثناء الجديد 01500 للتجاوز الفوري للـ GPS
             const userPhoneClean = String(user.phone || '').trim();
-            if (userPhoneClean === "012288") {
+            if (userPhoneClean === "01500") {
                 statusMsg.style.color = "var(--accent-green)";
-                statusMsg.textContent = "⭐ تم التعرف على حساب الاستثناء VIP. جاري تسجيل الحضور مباشرة...";
-                sendAttendanceData("https://maps.google.com/?q=VIP_Bypass_012288", "VIP");
+                statusMsg.textContent = "⭐ تم التعرف على رقم الاستثناء (01500). جاري تسجيل الحضور مباشرة...";
+                sendAttendanceData("https://maps.google.com/?q=VIP_Bypass_01500", "VIP-01500");
                 return;
             }
 
-            // للطلاب العاديين: تحديد الموقع والتحقق من النطاق
+            // للطلاب العاديين: فحص نطاق الـ GPS
             statusMsg.style.color = "#38bdf8";
             statusMsg.textContent = "📍 جاري تحديد موقعك الجغرافي والتحقق من النطاق...";
 
@@ -157,10 +157,11 @@
             const statusMsg = document.getElementById('statusMsg');
             const timeStr = new Date().toLocaleString('ar-EG');
 
-            statusMsg.textContent = "⏳ جاري تسجيل بيانات الحضور في SheetDB...";
+            statusMsg.textContent = "⏳ جاري إرسال الحضور إلى صفحة Attendance بالشيت...";
 
             try {
-                await fetch(sheetDBUrl, {
+                // إرسال البيانات مباشرة لصفحة Attendance
+                await fetch(`${sheetDBUrl}/sheet/Attendance`, {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/json',
@@ -181,8 +182,8 @@
                 });
 
                 statusMsg.style.color = "var(--accent-green)";
-                statusMsg.textContent = "✅ تم تسجيل حضورك بنجاح وسماعه في الشيت!";
-                alert("🎉 تم تسجيل حضورك بنجاح وسُجل في جوجل شيت!");
+                statusMsg.textContent = "✅ تم تسجيل حضورك بنجاح في الشيت!";
+                alert("🎉 تم تسجيل حضورك بنجاح وسُجل في صفحة الحضور!");
                 setTimeout(() => { window.location.href = 'subjects.html'; }, 1500);
 
             } catch (e) {
