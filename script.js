@@ -1,4 +1,4 @@
-const sheetDBUrl = "https://sheetdb.io/api/v1/g17m6rokcn14s";
+const sheetDBUrl = "https://sheetdb.io/api/v1/345mjcrs9n0bx";
 
 function getOrCreateDeviceId() {
     let deviceId = localStorage.getItem('my_unique_device_id');
@@ -13,12 +13,14 @@ function generateStudentID() {
     return 'AZ' + Math.floor(100000 + Math.random() * 900000);
 }
 
-// جلب الإعدادات من صفحة Settings
+// جلب الإعدادات من تبويب Setting
 async function fetchAppSettings() {
     try {
-        const response = await fetch(`${sheetDBUrl}/sheet/Settings`, { cache: "no-store" });
+        const response = await fetch(`${sheetDBUrl}?sheet=Setting`, { cache: "no-store" });
         const data = await response.json();
         if (Array.isArray(data) && data.length > 0) {
+            const settingRow = data.find(row => row.isAttendanceOpen !== undefined || row.isRegistrationOpen !== undefined || row.currentSubject !== undefined);
+            if (settingRow) return settingRow;
             return data[0];
         }
         return { isAttendanceOpen: 'true', isRegistrationOpen: 'true', currentSubject: 'المحاضرة الأولى' };
@@ -27,10 +29,10 @@ async function fetchAppSettings() {
     }
 }
 
-// جلب كل الطلاب من صفحة Students
+// جلب الطلاب من تبويب students
 async function fetchAllStudentsFromSheet() {
     try {
-        const response = await fetch(`${sheetDBUrl}/sheet/Students`, { cache: "no-store" });
+        const response = await fetch(`${sheetDBUrl}?sheet=students`, { cache: "no-store" });
         const data = await response.json();
         if (Array.isArray(data)) {
             return data.filter(row => row.id && row.id.toString().startsWith('AZ'));
@@ -41,22 +43,11 @@ async function fetchAllStudentsFromSheet() {
     }
 }
 
-// جلب سجل الحضور من صفحة Attendance
-async function fetchAttendanceFromSheet() {
-    try {
-        const response = await fetch(`${sheetDBUrl}/sheet/Attendance`, { cache: "no-store" });
-        const data = await response.json();
-        return Array.isArray(data) ? data : [];
-    } catch (error) {
-        return [];
-    }
-}
-
 async function createAccount() {
     const statusEl = document.getElementById('authStatus');
     if(statusEl) {
         statusEl.style.color = "#38bdf8";
-        statusEl.textContent = "⏳ جاري إنشاء الحساب وإرساله لصفحة Students...";
+        statusEl.textContent = "⏳ جاري إنشاء الحساب وإرساله للشيت...";
     }
 
     const name = document.getElementById('fullname')?.value.trim();
@@ -103,9 +94,9 @@ async function createAccount() {
     localStorage.setItem(newId, JSON.stringify(userData));
     localStorage.setItem('currentUser', JSON.stringify(userData));
 
-    // إرسال البيانات إلى صفحة Students بالتحديد في الشيت
+    // إرسال البيانات لصفحة students
     try {
-        await fetch(`${sheetDBUrl}/sheet/Students`, {
+        await fetch(`${sheetDBUrl}?sheet=students`, {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
