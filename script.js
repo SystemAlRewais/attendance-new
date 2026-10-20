@@ -13,13 +13,16 @@ function generateStudentID() {
     return 'AZ' + Math.floor(100000 + Math.random() * 900000);
 }
 
-// جلب الإعدادات
+// جلب الإعدادات من الشيت
 async function fetchAppSettings() {
     try {
-        const response = await fetch(`${sheetDBUrl}/sheet/Settings`, { cache: "no-store" });
+        const response = await fetch(sheetDBUrl, { cache: "no-store" });
         const data = await response.json();
         if (Array.isArray(data) && data.length > 0) {
-            return data[0]; 
+            // نبحث عن صف يحتوي على إعدادات أو نأخذ أول صف
+            const settingRow = data.find(row => row.isAttendanceOpen !== undefined || row.isRegistrationOpen !== undefined || row.currentSubject !== undefined);
+            if (settingRow) return settingRow;
+            return data[0];
         }
         return { isAttendanceOpen: 'true', isRegistrationOpen: 'true', currentSubject: 'المحاضرة الأولى' };
     } catch (error) {
@@ -27,11 +30,16 @@ async function fetchAppSettings() {
     }
 }
 
-// جلب جميع الطلاب من SheetDB
+// جلب كل الطلاب
 async function fetchAllStudentsFromSheet() {
     try {
-        const response = await fetch(`${sheetDBUrl}/sheet/Students`, { cache: "no-store" });
-        return await response.json();
+        const response = await fetch(sheetDBUrl, { cache: "no-store" });
+        const data = await response.json();
+        if (Array.isArray(data)) {
+            // تصفية السطور التي تحتوي على id طالب
+            return data.filter(row => row.id && row.id.toString().startsWith('AZ'));
+        }
+        return [];
     } catch (error) {
         return [];
     }
@@ -41,7 +49,7 @@ async function createAccount() {
     const statusEl = document.getElementById('authStatus');
     if(statusEl) {
         statusEl.style.color = "#38bdf8";
-        statusEl.textContent = "⏳ جاري إنشاء الحساب سحابياً...";
+        statusEl.textContent = "⏳ جاري التحقق وإنشاء الحساب...";
     }
 
     const name = document.getElementById('fullname')?.value.trim();
@@ -55,10 +63,10 @@ async function createAccount() {
         return;
     }
 
-    // التحقق من حالة الإغلاق للسجل
+    // التحقق من حالة الإغلاق للتسجيل
     const settings = await fetchAppSettings();
     if (String(settings.isRegistrationOpen).trim() === 'false') {
-        alert("❌ إنشاء الحسابات مغلق حالياً من قِبل الإدارة!");
+        alert("❌ عذراً، إنشاء الحسابات مغلق حالياً من قِبل الإدارة!");
         if(statusEl) statusEl.textContent = "🔒 إنشاء الحسابات مغلق حالياً.";
         return;
     }
@@ -66,9 +74,9 @@ async function createAccount() {
     let deviceId = getOrCreateDeviceId();
     const existingUser = localStorage.getItem('currentUser');
     if (existingUser) {
-        const adminOverride = prompt("🔒 هذا الجهاز مسجل عليه حساب مسبقاً.\nلإنشاء حساب جديد، أدخل رقم الإدارة السري (44554455):");
-        if (adminOverride !== "44554455") {
-            alert("❌ الرقم السري خطأ!");
+        const adminOverride = prompt("🔒 هذا الجهاز مسجل عليه حساب مسبقاً.\nللمساعدة وإنشاء حساب جديد، أدخل رقم الإدارة السري (Emoo):");
+        if (adminOverride !== "Emoo") {
+            alert("❌ الرقم السري غير صحيح!");
             if(statusEl) statusEl.textContent = "";
             return;
         }
@@ -88,26 +96,15 @@ async function createAccount() {
     localStorage.setItem(newId, JSON.stringify(userData));
     localStorage.setItem('currentUser', JSON.stringify(userData));
 
-    // إرسال البيانات لـ SheetDB (جدول Students)
+    // إرسال مباشر إلى SheetDB
     try {
-        await fetch(`${sheetDBUrl}`, {
+        await fetch(sheetDBUrl, {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                data: [
-                    {
-                        id: newId,
-                        name: name,
-                        phone: phone,
-                        grade: grade,
-                        password: password,
-                        boundDeviceId: deviceId
-                    }
-                ]
-            })
+            body: JSON.stringify(userData)
         });
     } catch (e) {
         console.warn("خطأ في الاتصال بالشيت:", e);
@@ -126,6 +123,7 @@ function login() {
         return;
     }
 
+    // البحث محلياً أو في التخزين
     const savedUserStr = localStorage.getItem(id);
     if (!savedUserStr) {
         alert("❌ هذا الرقم الجامعي غير مسجل على هذا الجهاز!");
