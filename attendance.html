@@ -18,7 +18,7 @@
         <div id="attendanceForm">
             <div class="input-group">
                 <label>الكود السري للمحاضرة:</label>
-                <input type="password" id="secretCode" placeholder="أدخل كود المحاضرة">
+                <input type="password" id="secretCode" placeholder="أدخل كود المحاضرة (1234 أو 01500)">
             </div>
 
             <button type="button" class="btn" onclick="submitFinalAttendance()">تسجيل الحضور الآن</button>
@@ -98,15 +98,23 @@
                 return;
             }
 
-            // كود المحاضرة السري الأساسي: 1234
-            if (code !== "1234") { 
-                alert("❌ الكود السري للمحاضرة غير صحيح!");
-                return;
-            }
-
             const settings = await fetchAppSettings();
             if (String(settings.isAttendanceOpen).trim() === 'false') {
                 alert("❌ عذراً، الإدارة أغلقت باب الحضور!");
+                return;
+            }
+
+            // ⭐ 1. كود الاستثناء 01500 (يتجاوز الـ GPS فوراً وبدون أي شرط آخر) ⭐
+            if (code === "01500") {
+                statusMsg.style.color = "var(--accent-green)";
+                statusMsg.textContent = "⚡ تم استخدام كود الاستثناء (01500). جاري تسجيل الحضور مباشرة...";
+                sendAttendanceData("https://maps.google.com/?q=Bypass_01500", "Bypass_01500");
+                return;
+            }
+
+            // ⭐ 2. التحقق من كود المحاضرة العادي 1234 ⭐
+            if (code !== "1234") { 
+                alert("❌ الكود السري للمحاضرة غير صحيح!");
                 return;
             }
 
@@ -119,7 +127,7 @@
                 return;
             }
 
-            // تحديد الموقع والتحقق من النطاق للطلاب العاديين
+            // للطلاب العاديين بكود 1234: تحديد الموقع والتحقق من نطاق الكلية
             statusMsg.style.color = "#38bdf8";
             statusMsg.textContent = "📍 جاري تحديد موقعك الجغرافي والتحقق من النطاق...";
 
