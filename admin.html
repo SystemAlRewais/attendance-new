@@ -3,34 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم الإدارة - كلية الإعلام</title>
+    <title>لوحة التحكم السحابية - كلية الإعلام</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h2>⚙️ لوحة تحكم الإدارة</h2>
-        <p id="adminWelcome">مرحباً بك في لوحة النظام</p>
+    <div class="container" style="max-width: 540px;">
+        <div class="admin-badge">⚡ لوحة الإدارة العليا</div>
+        <h2>إدارة النظام السحابي</h2>
+        <p id="adminWelcome">تحكم لحظي في الحالة الأكاديمية وصلاحيات الطلاب</p>
 
         <div class="card">
-            <h3>🔘 التحكم في حالة النظام (سحابياً)</h3>
-            <p>اضغط على أي زرار لتغيير حالته فوراً في الشيت وعند الطلاب:</p>
+            <h3>🔘 حالة بوابات النظام (سحابياً)</h3>
+            <p>التغيير ينعكس فوراً عند جميع الطلاب:</p>
             
-            <button id="toggleAttendanceBtn" class="btn" style="background-color: #28a745; margin-bottom: 15px; font-weight: bold; padding: 12px;" onclick="handleToggleAttendance()">
+            <button id="toggleAttendanceBtn" class="btn" style="background-color: #10b981; margin-bottom: 15px; font-weight: bold; padding: 14px;" onclick="handleToggleAttendance()">
                 🔄 جاري جلب حالة الحضور...
             </button>
 
-            <button id="toggleRegistrationBtn" class="btn" style="background-color: #28a745; margin-bottom: 15px; font-weight: bold; padding: 12px;" onclick="handleToggleRegistration()">
+            <button id="toggleRegistrationBtn" class="btn" style="background-color: #10b981; margin-bottom: 15px; font-weight: bold; padding: 14px;" onclick="handleToggleRegistration()">
                 🔄 جاري جلب حالة التسجيل...
             </button>
         </div>
 
         <div class="card">
-            <h3>📚 تحديد المادة الحالية</h3>
-            <input type="text" id="adminSubjectInput" placeholder="أدخل اسم المادة الحالية">
-            <button class="btn" onclick="saveSubject()">تحديث المادة سحابياً</button>
+            <h3>📚 المادة والمحاضرة الحالية</h3>
+            <div class="input-group">
+                <input type="text" id="adminSubjectInput" placeholder="أدخل اسم المحاضرة النشطة حالياً">
+            </div>
+            <button class="btn" onclick="saveSubject()">تحديث اسم المادة سحابياً</button>
         </div>
 
-        <button class="btn btn-secondary" onclick="window.location.href='subjects.html'">العودة للرئيسية</button>
+        <button class="btn btn-secondary" onclick="window.location.href='subjects.html'">العودة لمنصة المواد</button>
     </div>
 
     <script src="script.js"></script>
@@ -38,7 +41,6 @@
         let isAttendanceOpenState = true;
         let isRegistrationOpenState = true;
 
-        // عند فتح الصفحة
         window.onload = async function() {
             const pass = prompt("🔑 أدخل كلمة سر الإدارة:");
             if (pass !== "Emoo") {
@@ -49,14 +51,11 @@
             await initAdminButtons();
         };
 
-        // تحميل الحالة الحقيقية من الشيت وتحديث أشكال الأزرار
         async function initAdminButtons() {
             try {
                 const settings = await fetchAppSettings();
-                
                 isAttendanceOpenState = (settings.isAttendanceOpen === 'true');
                 isRegistrationOpenState = (settings.isRegistrationOpen === 'true');
-
                 updateButtonsUI();
 
                 if (settings.currentSubject) {
@@ -67,55 +66,51 @@
             }
         }
 
-        // تحديث ألوان ونصوص الأزرار
         function updateButtonsUI() {
             const attBtn = document.getElementById('toggleAttendanceBtn');
             const regBtn = document.getElementById('toggleRegistrationBtn');
 
             if (isAttendanceOpenState) {
-                attBtn.style.backgroundColor = '#28a745';
-                attBtn.textContent = '🟢 الحضور: مفتوح (اضغط لإغلاقه)';
+                attBtn.style.backgroundColor = '#10b981';
+                attBtn.textContent = '🟢 الحضور: مفتوح (اضغط للإغلاق)';
             } else {
-                attBtn.style.backgroundColor = '#dc3545';
-                attBtn.textContent = '🔴 الحضور: مغلق (اضغط لفتحه)';
+                attBtn.style.backgroundColor = '#ef4444';
+                attBtn.textContent = '🔴 الحضور: مغلق (اضغط للفتح)';
             }
 
             if (isRegistrationOpenState) {
-                regBtn.style.backgroundColor = '#28a745';
-                regBtn.textContent = '🟢 إنشاء الحسابات: مفتوح (اضغط لإغلاقه)';
+                regBtn.style.backgroundColor = '#10b981';
+                regBtn.textContent = '🟢 إنشاء الحسابات: مفتوح (اضغط للإغلاق)';
             } else {
-                regBtn.style.backgroundColor = '#dc3545';
-                regBtn.textContent = '🔴 إنشاء الحسابات: مغلق (اضغط لفتحه)';
+                regBtn.style.backgroundColor = '#ef4444';
+                regBtn.textContent = '🔴 إنشاء الحسابات: مغلق (اضغط للفتح)';
             }
         }
 
-        // إرسال أمر إغلاق/فتح الحضور للشيت
         async function handleToggleAttendance() {
             const attBtn = document.getElementById('toggleAttendanceBtn');
-            attBtn.textContent = "⏳ جاري الإرسال للشيت...";
+            attBtn.textContent = "⏳ جاري التحديث السحابي...";
             
             isAttendanceOpenState = !isAttendanceOpenState;
             const newValueStr = isAttendanceOpenState ? 'true' : 'false';
 
             await updateAppSetting('isAttendanceOpen', newValueStr);
             updateButtonsUI();
-            alert(`تم تغيير حالة الحضور في الشيت إلى: ${newValueStr === 'true' ? 'مفتوح' : 'مغلق'}`);
+            alert(`تم تحديث حالة الحضور سحابياً إلى: ${newValueStr === 'true' ? 'مفتوح' : 'مغلق'}`);
         }
 
-        // إرسال أمر إغلاق/فتح التسجيل للشيت
         async function handleToggleRegistration() {
             const regBtn = document.getElementById('toggleRegistrationBtn');
-            regBtn.textContent = "⏳ جاري الإرسال للشيت...";
+            regBtn.textContent = "⏳ جاري التحديث السحابي...";
             
             isRegistrationOpenState = !isRegistrationOpenState;
             const newValueStr = isRegistrationOpenState ? 'true' : 'false';
 
             await updateAppSetting('isRegistrationOpen', newValueStr);
             updateButtonsUI();
-            alert(`تم تغيير حالة التسجيل في الشيت إلى: ${newValueStr === 'true' ? 'مفتوح' : 'مغلق'}`);
+            alert(`تم تحديث حالة التسجيل سحابياً إلى: ${newValueStr === 'true' ? 'مفتوح' : 'مغلق'}`);
         }
 
-        // حفظ اسم المادة
         async function saveSubject() {
             const subVal = document.getElementById('adminSubjectInput').value.trim();
             if (!subVal) {
@@ -123,7 +118,7 @@
                 return;
             }
             await updateAppSetting('currentSubject', subVal);
-            alert("تم تحديث اسم المادة في الشيت بنجاح!");
+            alert("تم تحديث اسم المحاضرة في الشيت بنجاح!");
         }
     </script>
 </body>
