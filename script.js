@@ -15,10 +15,12 @@ function generateStudentID() {
     return 'AZ' + Math.floor(100000 + Math.random() * 900000);
 }
 
-// جلب الإعدادات من جوجل شيت مباشرة عبر Web App
+// جلب الإعدادات من جوجل شيت
 async function fetchAppSettings() {
     try {
-        const response = await fetch(webAppUrl + "?sheet=Settings");
+        const response = await fetch(webAppUrl + "?sheet=Settings", {
+            cache: "no-store"
+        });
         const settings = await response.json();
         return settings;
     } catch (error) {
@@ -40,9 +42,6 @@ async function updateAppSetting(keyName, keyValue) {
                 value: String(keyValue)
             })
         });
-        let cached = JSON.parse(localStorage.getItem('cachedSettings')) || {};
-        cached[keyName] = String(keyValue);
-        localStorage.setItem('cachedSettings', JSON.stringify(cached));
     } catch (error) {
         console.error("خطأ التحديث:", error);
     }
@@ -67,7 +66,7 @@ async function createAccount() {
         return;
     }
 
-    // التحقق من فتح التسجيل
+    // التحقق من فتح التسجيل سحابياً
     const settings = await fetchAppSettings();
     if (settings.isRegistrationOpen === 'false') {
         alert("❌ إنشاء الحسابات جديد مغلق حالياً من قِبل الإدارة!");
@@ -87,7 +86,7 @@ async function createAccount() {
         boundDeviceId: deviceId
     };
 
-    // حفظ محلياً
+    // حفظ محلياً للتأكيد
     localStorage.setItem(newId, JSON.stringify(userData));
     localStorage.setItem('currentUser', JSON.stringify(userData));
 
@@ -107,7 +106,7 @@ async function createAccount() {
             })
         });
     } catch (e) {
-        console.warn("تم الحفظ محلياً:", e);
+        console.warn("خطأ في الاتصال السحابي:", e);
     }
 
     alert(`🎉 تم إنشاء حسابك بنجاح!\n\n🆔 الرقم الجامعي الخاص بك: ${newId}\n🔑 كلمة السر: ${password}\n\nاحتفظ بهما للدخول لاحقاً!`);
