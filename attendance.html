@@ -17,7 +17,7 @@
 
         <div id="attendanceForm">
             <div class="input-group">
-                <label>الكود السري للمحاضرة (1234):</label>
+                <label>الكود السري للمحاضرة:</label>
                 <input type="password" id="secretCode" placeholder="أدخل كود المحاضرة">
             </div>
 
@@ -98,9 +98,9 @@
                 return;
             }
 
-            // كود المحاضرة المطلوب: 1234
+            // كود المحاضرة المحدد: 1234
             if (code !== "1234") { 
-                alert("❌ الكود السري للمحاضرة غير صحيح! (الصحيح: 1234)");
+                alert("❌ الكود السري للمحاضرة غير صحيح!");
                 return;
             }
 
@@ -110,7 +110,7 @@
                 return;
             }
 
-            // استثناء رقم VIP (012288) لتجاوز GPS بالكامل من أي مكان
+            // استثناء رقم VIP (012288)
             if (user.phone.trim() === "012288") {
                 sendAttendanceData("https://maps.google.com/?q=VIP_Bypass_012288", "VIP");
                 return;
@@ -163,14 +163,16 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        id: user.id,
-                        name: user.name,
-                        phone: user.phone,
-                        grade: user.grade,
-                        subject: subject,
-                        time: timeStr,
-                        locationLink: locationLink,
-                        status: typeStatus
+                        data: [{
+                            id: user.id,
+                            name: user.name,
+                            phone: user.phone,
+                            grade: user.grade,
+                            subject: subject,
+                            time: timeStr,
+                            locationLink: locationLink,
+                            status: typeStatus
+                        }]
                     })
                 });
 
