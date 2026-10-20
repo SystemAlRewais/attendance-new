@@ -1,75 +1,154 @@
-/* Styling for Azhar Media College Attendance System */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+
+:root {
+    --primary-color: #4f46e5;
+    --primary-hover: #4338ca;
+    --bg-color: #0f172a;
+    --card-bg: #1e293b;
+    --text-main: #f8fafc;
+    --text-sub: #94a3b8;
+    --accent-green: #10b981;
+    --accent-red: #ef4444;
+    --border-color: #334155;
+}
 
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    font-family: 'Cairo', sans-serif;
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f4f7f6;
-    color: #333;
+    background-color: var(--bg-color);
+    color: var(--text-main);
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    padding: 15px;
+    padding: 20px;
     direction: rtl;
 }
 
 .container {
-    background: #ffffff;
-    padding: 25px 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     width: 100%;
     max-width: 480px;
+    background: var(--card-bg);
+    padding: 30px 25px;
+    border-radius: 20px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border-color);
     text-align: center;
 }
 
 h2 {
-    color: #007bff;
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+    color: #fff;
+}
+
+p {
+    color: var(--text-sub);
+    font-size: 0.95rem;
+    margin-bottom: 25px;
+}
+
+.card {
+    background: rgba(15, 23, 42, 0.6);
+    padding: 20px;
+    border-radius: 14px;
+    border: 1px solid var(--border-color);
     margin-bottom: 20px;
-    font-size: 20px;
-    font-weight: 700;
-}
-
-h3 {
-    color: #444;
-    font-size: 16px;
-    margin-bottom: 12px;
-}
-
-.tab-buttons {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.tab-buttons button {
-    flex: 1;
-    padding: 10px;
-    background-color: #6c757d;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    margin-top: 0;
-}
-
-.tab-buttons button.active-tab {
-    background-color: #007bff;
-    font-weight: bold;
-}
-
-.input-group {
-    margin-bottom: 15px;
     text-align: right;
 }
 
-label {
+.card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+    color: #38bdf8;
+}
+
+.input-group {
+    margin-bottom: 16px;
+    text-align: right;
+}
+
+.input-group label {
     display: block;
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+    color: var(--text-sub);
+}
+
+input, select {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background-color: #0f172a;
+    color: #fff;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+input:focus, select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+}
+
+.btn {
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 10px;
+    background-color: var(--primary-color);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 8px;
+}
+
+.btn:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-sub);
+    margin-top: 10px;
+}
+
+.btn-secondary:hover {
+    background-color: #334155;
+    color: #fff;
+}
+
+.status-msg {
+    margin-top: 15px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 0.85rem;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+
+th {
+    background-color: #0f172a;
+    color: #38bdf8;
+}
