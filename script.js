@@ -1,4 +1,4 @@
-const webAppUrl = "https://script.google.com/macros/s/AKfycbwVv3Jhc8YGKwvL2FkIGb-sIR14MpfJBKK3YwouS-Y6-l-EtE45Clb11WulEMUCqR9q/exec";
+const sheetDBUrl = "https://sheetdb.io/api/v1/hemw89hh2supw";
 
 function getOrCreateDeviceId() {
     let deviceId = localStorage.getItem('my_unique_device_id');
@@ -13,42 +13,27 @@ function generateStudentID() {
     return 'AZ' + Math.floor(100000 + Math.random() * 900000);
 }
 
+// جلب الإعدادات من SheetDB (أو القيمة الافتراضية لو حصل مشكلة)
 async function fetchAppSettings() {
     try {
-        const response = await fetch(webAppUrl + "?sheet=Settings", { cache: "no-store" });
-        const settings = await response.json();
-        return settings;
+        const response = await fetch(`${sheetDBUrl}/sheet/Settings`, { cache: "no-store" });
+        const data = await response.json();
+        if (Array.isArray(data) && data.length > 0) {
+            // مفترض أن جدول Settings يحتوي على مفاتيح وقيم أو صف إعدادات
+            return data[0]; 
+        }
+        return { isAttendanceOpen: 'true', isRegistrationOpen: 'true', currentSubject: 'المحاضرة الأولى' };
     } catch (error) {
-        console.error("خطأ جلب الإعدادات:", error);
         return { isAttendanceOpen: 'true', isRegistrationOpen: 'true', currentSubject: 'المحاضرة الأولى' };
     }
 }
 
 async function fetchAllStudents() {
     try {
-        const response = await fetch(webAppUrl + "?sheet=Students", { cache: "no-store" });
-        const data = await response.json();
-        return data;
+        const response = await fetch(`${sheetDBUrl}/sheet/Students`, { cache: "no-store" });
+        return await response.json();
     } catch (error) {
-        console.error("خطأ جلب الطلاب:", error);
         return [];
-    }
-}
-
-async function updateAppSetting(keyName, keyValue) {
-    try {
-        await fetch(webAppUrl, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-                action: "updateSetting",
-                key: keyName,
-                value: String(keyValue)
-            })
-        });
-    } catch (error) {
-        console.error("خطأ التحديث:", error);
     }
 }
 
@@ -56,7 +41,7 @@ async function createAccount() {
     const statusEl = document.getElementById('authStatus');
     if(statusEl) {
         statusEl.style.color = "#38bdf8";
-        statusEl.textContent = "⏳ جاري التحقق وإنشاء الحساب سحابياً...";
+        statusEl.textContent = "⏳ جاري إنشاء الحساب سحابياً...";
     }
 
     const name = document.getElementById('fullname')?.value.trim();
@@ -80,9 +65,9 @@ async function createAccount() {
     let deviceId = getOrCreateDeviceId();
     const existingUser = localStorage.getItem('currentUser');
     if (existingUser) {
-        const adminOverride = prompt("🔒 هذا الجهاز مسجل عليه حساب مسبقاً.\nلإنشاء حساب جديد على نفس الجهاز، أدخل كلمة سر الإدارة (Emoo):");
+        const adminOverride = prompt("🔒 هذا الجهاز مسجل عليه حساب مسبقاً.\nلإنشاء حساب جديد، أدخل كلمة سر الإدارة (Emoo):");
         if (adminOverride !== "Emoo") {
-            alert("❌ كلمة السر غير صحيحة، لا يمكن إنشاء حساب جديد على هذا الجهاز.");
+            alert("❌ كلمة السر غير صحيحة!");
             if(statusEl) statusEl.textContent = "";
             return;
         }
@@ -90,7 +75,6 @@ async function createAccount() {
     }
 
     const newId = generateStudentID();
-
     const userData = {
         id: newId,
         name: name,
@@ -100,25 +84,33 @@ async function createAccount() {
         boundDeviceId: deviceId
     };
 
+    // حفظ محلي لتسريع الدخول
     localStorage.setItem(newId, JSON.stringify(userData));
     localStorage.setItem('currentUser', JSON.stringify(userData));
 
+    // إرسال البيانات مباشرة إلى SheetDB (جدول Students)
     try {
-        await fetch(webAppUrl, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
+        await fetch(`${sheetDBUrl}`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({
-                action: "addStudent",
-                id: newId,
-                name: name,
-                phone: phone,
-                grade: grade,
-                password: password
+                data: [
+                    {
+                        id: newId,
+                        name: name,
+                        phone: phone,
+                        grade: grade,
+                        password: password,
+                        boundDeviceId: deviceId
+                    }
+                ]
             })
         });
     } catch (e) {
-        console.warn("خطأ في الاتصال بالسيرفر:", e);
+        console.warn("فشل الحفظ في السيرفر، تم الحفظ محلياً:", e);
     }
 
     alert(`🎉 تم إنشاء حسابك بنجاح!\n\n🆔 الرقم الجامعي: ${newId}\n🔑 كلمة السر: ${password}`);
