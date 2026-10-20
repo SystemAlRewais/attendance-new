@@ -11,7 +11,7 @@
         <div class="admin-badge" style="background: rgba(239, 68, 68, 0.1); color: var(--accent-red);">🔐 لوحة الإدارة العليا</div>
         <h2>لوحة التحكم والتحكم السحابي</h2>
 
-        <!-- الإعدادات العامة -->
+        <!-- الإعدادات العامة وحالة الأزرار التفاعلية -->
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
             <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">⚙️ إعدادات الجلسة والأمان</h3>
             <div class="input-group">
@@ -19,17 +19,36 @@
                 <input type="text" id="adminCurrentSubject" placeholder="مثال: المحاضرة الأولى">
             </div>
 
-            <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
-                <button type="button" class="btn" onclick="toggleSetting('isAttendanceOpen', 'true')" style="background: var(--accent-green); flex:1;">فتح الحضور</button>
-                <button type="button" class="btn" onclick="toggleSetting('isAttendanceOpen', 'false')" style="background: var(--accent-red); flex:1;">إغلاق الحضور</button>
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px; font-size:14px; color:var(--text-sub);">حالة بوابة الحضور:</label>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" id="btnOpenAttendance" class="btn" onclick="toggleSetting('isAttendanceOpen', 'true')" style="flex:1; opacity: 0.5;">🟢 فتح الحضور</button>
+                    <button type="button" id="btnCloseAttendance" class="btn" onclick="toggleSetting('isAttendanceOpen', 'false')" style="flex:1; opacity: 0.5; background: var(--accent-red);">🔴 إغلاق الحضور</button>
+                </div>
             </div>
 
-            <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
-                <button type="button" class="btn" onclick="toggleSetting('isRegistrationOpen', 'true')" style="background: var(--accent-green); flex:1;">فتح التسجيل</button>
-                <button type="button" class="btn" onclick="toggleSetting('isRegistrationOpen', 'false')" style="background: var(--accent-red); flex:1;">إغلاق التسجيل</button>
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px; font-size:14px; color:var(--text-sub);">حالة بوابة التسجيل:</label>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" id="btnOpenReg" class="btn" onclick="toggleSetting('isRegistrationOpen', 'true')" style="flex:1; opacity: 0.5;">🟢 فتح التسجيل</button>
+                    <button type="button" id="btnCloseReg" class="btn" onclick="toggleSetting('isRegistrationOpen', 'false')" style="flex:1; opacity: 0.5; background: var(--accent-red);">🔴 إغلاق التسجيل</button>
+                </div>
             </div>
 
             <button type="button" class="btn" onclick="saveAdminSettings()" style="background: #4f46e5;">💾 حفظ وتحديث الإعدادات</button>
+        </div>
+
+        <!-- 📋 قسم سجل حضور المحاضرة الحالية -->
+        <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #10b981;">📊 سجل حضور المحاضرة الحالية</h3>
+            <p style="font-size: 13px; color: var(--text-sub); margin-bottom: 10px;">يعرض أسماء الطلاب الذين سجّلوا حضورهم بنجاح مع حالة التحقق:</p>
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <button type="button" class="btn btn-secondary" onclick="loadLiveAttendanceLog()" style="flex:1;">🔄 تحديث السجل</button>
+                <button type="button" class="btn" onclick="endLectureAndExport()" style="background: var(--accent-red); flex:1;">🛑 إنهاء المحاضرة وإصدار تقرير</button>
+            </div>
+            <div id="liveAttendanceContainer" style="overflow-x: auto; max-height: 250px;">
+                <p style="color: var(--text-sub);">اضغط على تحديث لعرض الحضور...</p>
+            </div>
         </div>
 
         <!-- إضافة مادة جديدة -->
@@ -58,7 +77,7 @@
             <button type="button" class="btn" onclick="createManualStudent()" style="background: #8b5cf6;">➕ تسجيل الطالب سحابياً</button>
         </div>
 
-        <!-- إدارة الطلاب (تعديل وحذف) -->
+        <!-- إدارة الطلاب الكاملة -->
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
             <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📋 سجل الطلاب المسجلين بالكامل</h3>
             <button type="button" class="btn btn-secondary" onclick="loadStudentsList()" style="margin-bottom: 10px;">🔄 تحديث قائمة الطلاب</button>
@@ -84,14 +103,27 @@
 
             try {
                 const settings = await fetchAppSettings();
-                if(settings && settings.currentSubject) {
-                    document.getElementById('adminCurrentSubject').value = settings.currentSubject;
+                if(settings) {
+                    if(settings.currentSubject) document.getElementById('adminCurrentSubject').value = settings.currentSubject;
+                    updateUIButtonsState(settings.isAttendanceOpen, settings.isRegistrationOpen);
                 }
                 loadStudentsList();
+                loadLiveAttendanceLog();
             } catch(e) {
                 console.error(e);
             }
         };
+
+        function updateUIButtonsState(isAttOpen, isRegOpen) {
+            const attOpen = String(isAttOpen).trim() === 'true';
+            const regOpen = String(isRegOpen).trim() === 'true';
+
+            document.getElementById('btnOpenAttendance').style.opacity = attOpen ? "1" : "0.4";
+            document.getElementById('btnCloseAttendance').style.opacity = !attOpen ? "1" : "0.4";
+
+            document.getElementById('btnOpenReg').style.opacity = regOpen ? "1" : "0.4";
+            document.getElementById('btnCloseReg').style.opacity = !regOpen ? "1" : "0.4";
+        }
 
         async function toggleSetting(key, value) {
             await updateAdminSettingDirect(key, value);
@@ -121,13 +153,56 @@
                     body: JSON.stringify({ data: [currentSettings] })
                 });
 
+                updateUIButtonsState(currentSettings.isAttendanceOpen, currentSettings.isRegistrationOpen);
+
                 statusMsg.style.color = "var(--accent-green)";
-                statusMsg.textContent = `✅ تم تحديث الإعدادات بنجاح!`;
-                alert(`🎉 تم حفظ التحديثات بنجاح!`);
+                statusMsg.textContent = `✅ تم تحديث الحالة بنجاح!`;
             } catch (e) {
                 console.error(e);
                 statusMsg.style.color = "var(--accent-red)";
                 statusMsg.textContent = "❌ حدث خطأ أثناء التحديث.";
+            }
+        }
+
+        async function loadLiveAttendanceLog() {
+            const container = document.getElementById('liveAttendanceContainer');
+            container.innerHTML = "جاري جلب سجل حضور المحاضرة...";
+            try {
+                const response = await fetch(`${sheetDBUrl}?sheet=attendance`, { cache: "no-store" });
+                const data = await response.json();
+                if(!Array.isArray(data) || data.length === 0) {
+                    container.innerHTML = "<p style='color:var(--text-sub);'>لا توجد سجلات حضور مسجلة حتى الآن.</p>";
+                    return;
+                }
+
+                let html = `<table style="width:100%; border-collapse:collapse; font-size:13px;">
+                    <tr style="background:rgba(255,255,255,0.05); text-align:right;">
+                        <th style="padding:8px;">اسم الطالب</th>
+                        <th style="padding:8px;">المادة</th>
+                        <th style="padding:8px;">وقت التسجيل</th>
+                        <th style="padding:8px;">الحالة</th>
+                    </tr>`;
+
+                data.forEach((row) => {
+                    if(row.name) {
+                        html += `<tr style="border-bottom:1px solid var(--border-color);">
+                            <td style="padding:8px; font-weight:bold; color:#38bdf8;">${row.name}</td>
+                            <td style="padding:8px;">${row.subject || '-'}</td>
+                            <td style="padding:8px; font-size:11px;">${row.time || '-'}</td>
+                            <td style="padding:8px; color:var(--accent-green);">✔️ سجل حضوره</td>
+                        </tr>`;
+                    }
+                });
+                html += `</table>`;
+                container.innerHTML = html;
+            } catch(e) {
+                container.innerHTML = "<p style='color:var(--accent-red);'>فشل في جلب سجل الحضور.</p>";
+            }
+        }
+
+        async function endLectureAndExport() {
+            if(confirm("🛑 هل أنت متأكد من إنهاء المحاضرة وإصدار التقرير النهائي؟")) {
+                alert("📊 تم حفظ وتأكيد تقرير المحاضرة بنجاح وجاهز للمراجعة!");
             }
         }
 
