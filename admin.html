@@ -201,8 +201,33 @@
         }
 
         async function endLectureAndExport() {
-            if(confirm("🛑 هل أنت متأكد من إنهاء المحاضرة وإصدار التقرير النهائي؟")) {
-                alert("📊 تم حفظ وتأكيد تقرير المحاضرة بنجاح وجاهز للمراجعة!");
+            if(confirm("🛑 هل أنت متأكد من إنهاء المحاضرة الحالية؟ سيتم تفريغ سجل الحضور الحالي بالكامل.")) {
+                const statusMsg = document.getElementById('adminStatusMsg');
+                statusMsg.style.color = "#38bdf8";
+                statusMsg.textContent = "⏳ جاري تفريغ ومسح سجل الحضور من الشيت...";
+
+                try {
+                    const response = await fetch(`${sheetDBUrl}?sheet=attendance`, { cache: "no-store" });
+                    const rows = await response.json();
+                    
+                    if(Array.isArray(rows)) {
+                        for(let row of rows) {
+                            if(row.id) {
+                                await fetch(`${sheetDBUrl}/id/${row.id}?sheet=attendance`, { method: 'DELETE' });
+                            }
+                        }
+                    }
+
+                    statusMsg.style.color = "var(--accent-green)";
+                    statusMsg.textContent = "✅ تم إنهاء المحاضرة وتفريغ السجل بنجاح!";
+                    alert("📊 تم إنهاء المحاضرة وتفريغ سجل الحضور وأصبح الشيت جاهزاً للمحاضرة القادمة!");
+                    loadLiveAttendanceLog();
+
+                } catch(e) {
+                    console.error(e);
+                    statusMsg.style.color = "var(--accent-red)";
+                    statusMsg.textContent = "❌ حدث خطأ أثناء تفريغ السجل.";
+                }
             }
         }
 
