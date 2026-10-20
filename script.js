@@ -13,13 +13,12 @@ function generateStudentID() {
     return 'AZ' + Math.floor(100000 + Math.random() * 900000);
 }
 
-// جلب الإعدادات من SheetDB (أو القيمة الافتراضية لو حصل مشكلة)
+// جلب الإعدادات
 async function fetchAppSettings() {
     try {
         const response = await fetch(`${sheetDBUrl}/sheet/Settings`, { cache: "no-store" });
         const data = await response.json();
         if (Array.isArray(data) && data.length > 0) {
-            // مفترض أن جدول Settings يحتوي على مفاتيح وقيم أو صف إعدادات
             return data[0]; 
         }
         return { isAttendanceOpen: 'true', isRegistrationOpen: 'true', currentSubject: 'المحاضرة الأولى' };
@@ -28,7 +27,8 @@ async function fetchAppSettings() {
     }
 }
 
-async function fetchAllStudents() {
+// جلب جميع الطلاب من SheetDB
+async function fetchAllStudentsFromSheet() {
     try {
         const response = await fetch(`${sheetDBUrl}/sheet/Students`, { cache: "no-store" });
         return await response.json();
@@ -55,6 +55,7 @@ async function createAccount() {
         return;
     }
 
+    // التحقق من حالة الإغلاق للسجل
     const settings = await fetchAppSettings();
     if (String(settings.isRegistrationOpen).trim() === 'false') {
         alert("❌ إنشاء الحسابات مغلق حالياً من قِبل الإدارة!");
@@ -65,9 +66,9 @@ async function createAccount() {
     let deviceId = getOrCreateDeviceId();
     const existingUser = localStorage.getItem('currentUser');
     if (existingUser) {
-        const adminOverride = prompt("🔒 هذا الجهاز مسجل عليه حساب مسبقاً.\nلإنشاء حساب جديد، أدخل كلمة سر الإدارة (Emoo):");
-        if (adminOverride !== "Emoo") {
-            alert("❌ كلمة السر غير صحيحة!");
+        const adminOverride = prompt("🔒 هذا الجهاز مسجل عليه حساب مسبقاً.\nلإنشاء حساب جديد، أدخل رقم الإدارة السري (44554455):");
+        if (adminOverride !== "44554455") {
+            alert("❌ الرقم السري خطأ!");
             if(statusEl) statusEl.textContent = "";
             return;
         }
@@ -84,11 +85,10 @@ async function createAccount() {
         boundDeviceId: deviceId
     };
 
-    // حفظ محلي لتسريع الدخول
     localStorage.setItem(newId, JSON.stringify(userData));
     localStorage.setItem('currentUser', JSON.stringify(userData));
 
-    // إرسال البيانات مباشرة إلى SheetDB (جدول Students)
+    // إرسال البيانات لـ SheetDB (جدول Students)
     try {
         await fetch(`${sheetDBUrl}`, {
             method: 'POST',
@@ -110,7 +110,7 @@ async function createAccount() {
             })
         });
     } catch (e) {
-        console.warn("فشل الحفظ في السيرفر، تم الحفظ محلياً:", e);
+        console.warn("خطأ في الاتصال بالشيت:", e);
     }
 
     alert(`🎉 تم إنشاء حسابك بنجاح!\n\n🆔 الرقم الجامعي: ${newId}\n🔑 كلمة السر: ${password}`);
