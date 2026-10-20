@@ -1,6 +1,5 @@
 const webAppUrl = "https://script.google.com/macros/s/AKfycbyQToh9a8IglYM0B8RwUpxAGdxWdfbKDr06NaU6PN8ACjuMyyEG8h4bQd2naSbrEYMn6w/exec";
 
-// إنشاء بصمة فريدة للجهاز
 function getOrCreateDeviceId() {
     let deviceId = localStorage.getItem('my_unique_device_id');
     if (!deviceId) {
@@ -10,17 +9,13 @@ function getOrCreateDeviceId() {
     return deviceId;
 }
 
-// توليد ID طالب
 function generateStudentID() {
     return 'AZ' + Math.floor(100000 + Math.random() * 900000);
 }
 
-// جلب الإعدادات من جوجل شيت
 async function fetchAppSettings() {
     try {
-        const response = await fetch(webAppUrl + "?sheet=Settings", {
-            cache: "no-store"
-        });
+        const response = await fetch(webAppUrl + "?sheet=Settings", { cache: "no-store" });
         const settings = await response.json();
         return settings;
     } catch (error) {
@@ -29,7 +24,17 @@ async function fetchAppSettings() {
     }
 }
 
-// تحديث الإعدادات في شيت جوجل (للإدارة)
+async function fetchAllStudents() {
+    try {
+        const response = await fetch(webAppUrl + "?sheet=Students", { cache: "no-store" });
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error("خطأ جلب الطلاب:", error);
+        return [];
+    }
+}
+
 async function updateAppSetting(keyName, keyValue) {
     try {
         await fetch(webAppUrl, {
@@ -47,7 +52,6 @@ async function updateAppSetting(keyName, keyValue) {
     }
 }
 
-// إنشاء حساب جديد وتخزينه في شيت Students
 async function createAccount() {
     const statusEl = document.getElementById('authStatus');
     if(statusEl) {
@@ -66,10 +70,9 @@ async function createAccount() {
         return;
     }
 
-    // التحقق من فتح التسجيل سحابياً
     const settings = await fetchAppSettings();
-    if (settings.isRegistrationOpen === 'false') {
-        alert("❌ إنشاء الحسابات جديد مغلق حالياً من قِبل الإدارة!");
+    if (String(settings.isRegistrationOpen).trim() === 'false') {
+        alert("❌ إنشاء الحسابات مغلق حالياً من قِبل الإدارة!");
         if(statusEl) statusEl.textContent = "🔒 إنشاء الحسابات مغلق حالياً.";
         return;
     }
@@ -86,11 +89,9 @@ async function createAccount() {
         boundDeviceId: deviceId
     };
 
-    // حفظ محلياً للتأكيد
     localStorage.setItem(newId, JSON.stringify(userData));
     localStorage.setItem('currentUser', JSON.stringify(userData));
 
-    // إرسال البيانات لجوجل شيت مباشرة
     try {
         await fetch(webAppUrl, {
             method: "POST",
@@ -106,14 +107,13 @@ async function createAccount() {
             })
         });
     } catch (e) {
-        console.warn("خطأ في الاتصال السحابي:", e);
+        console.warn("خطأ في الاتصال بالسيرفر:", e);
     }
 
-    alert(`🎉 تم إنشاء حسابك بنجاح!\n\n🆔 الرقم الجامعي الخاص بك: ${newId}\n🔑 كلمة السر: ${password}\n\nاحتفظ بهما للدخول لاحقاً!`);
+    alert(`🎉 تم إنشاء حسابك بنجاح!\n\n🆔 الرقم الجامعي: ${newId}\n🔑 كلمة السر: ${password}`);
     window.location.href = 'subjects.html';
 }
 
-// تسجيل الدخول
 function login() {
     const id = document.getElementById('loginId')?.value.trim();
     const pass = document.getElementById('loginPassword')?.value.trim();
