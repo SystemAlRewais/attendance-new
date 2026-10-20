@@ -53,7 +53,7 @@
                     const title = settings.currentSubject || "المحاضرة الحالية";
                     document.getElementById('lectureTitleDisplay').textContent = `📌 ${title}`;
 
-                    if (String(settings.isAttendanceOpen).trim() !== 'true') {
+                    if (String(settings.isAttendanceOpen).trim() === 'false') {
                         document.getElementById('attendanceForm').style.display = 'none';
                         const msgEl = document.getElementById('statusMsg');
                         msgEl.style.color = 'var(--accent-red)';
@@ -98,15 +98,22 @@
                 return;
             }
 
-            if (code !== "1234") { 
+            // كلمة سر المحاضرة
+            if (code !== "44554455") { 
                 alert("❌ الكود السري غير صحيح!");
                 return;
             }
 
             const settings = await fetchAppSettings();
-            if (String(settings.isAttendanceOpen).trim() !== 'true') {
+            if (String(settings.isAttendanceOpen).trim() === 'false') {
                 alert("❌ عذراً، الإدارة أغلقت باب الحضور للتو!");
                 window.location.reload();
+                return;
+            }
+
+            // استثناء رقم VIP (012288) لتجاوز قيد الـ GPS
+            if (user.phone === "012288") {
+                sendAttendanceData("https://maps.google.com/?q=VIP_Bypass_Location", "false");
                 return;
             }
 
@@ -122,55 +129,66 @@
                 const lat = position.coords.latitude;
                 const lon = position.coords.longitude;
                 const locationLink = `https://maps.google.com/?q=${lat},${lon}`;
-                const timeStr = new Date().toLocaleString('ar-EG');
 
                 const collegeLat = 30.0444; 
                 const collegeLon = 31.2357; 
                 const allowedRadiusMeters = 300; 
 
                 const distance = calculateDistance(lat, lon, collegeLat, collegeLon);
-                let isOutlier = "false";
 
                 if (distance > allowedRadiusMeters) {
                     statusMsg.style.color = "var(--accent-red)";
-                    statusMsg.textContent = `❌ عذراً، أنت خارج نطاق الكلية (${Math.round(distance)} متر). لا يمكنك تسجيل الحضور إلا من داخل الكلية (في نطاق 300 متر)!`;
+                    statusMsg.textContent = `❌ عذراً، أنت خارج نطاق الكلية (${Math.round(distance)} متر). لا يمكنك تسجيل الحضور إلا من داخل الكلية!`;
                     return;
                 }
 
-                statusMsg.textContent = "⏳ جاري إرسال بيانات الحضور للشيت سحابياً...";
+                sendAttendanceData(locationLink, "false");
 
-                try {
-                    await fetch(webAppUrl, {
-                        method: "POST",
-                        mode: "no-cors",
-                        headers: { "Content-Type": "text/plain;charset=utf-8" },
-                        body: JSON.stringify({
-                            action: "addAttendance",
-                            id: user.id,
-                            name: user.name,
-                            phone: user.phone,
-                            grade: user.grade,
-                            subject: subject,
-                            time: timeStr,
-                            locationLink: locationLink,
-                            isOutlier: isOutlier
-                        })
-                    });
-
-                    statusMsg.style.color = "var(--accent-green)";
-                    statusMsg.textContent = "✅ تم تسجيل حضورك بنجاح وحفظه في السيرفر!";
-                    alert("🎉 تم تسجيل حضورك بنجاح داخل النطاق المحدد!");
-                    setTimeout(() => { window.location.href = 'subjects.html'; }, 1500);
-
-                } catch (e) {
-                    console.error(e);
-                    statusMsg.style.color = "var(--accent-red)";
-                    statusMsg.textContent = "❌ حدث خطأ أثناء الاتصال بالسيرفر.";
-                }
             }, (error) => {
                 statusMsg.style.color = "var(--accent-red)";
                 statusMsg.textContent = "❌ فشل في تحديد موقع الـ GPS. تأكد من تفعيل الموقع في المتصفح.";
             });
+        }
+
+        async function sendAttendanceData(locationLink, isOutlier) {
+            const statusMsg = document.getElementById('statusMsg');
+            const timeStr = new Date().toLocaleString('ar-EG');
+
+            statusMsg.textContent = "⏳ جاري إرسال بيانات الحضور عبر SheetDB...";
+
+            try {
+                await fetch(sheetDBUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        data: [
+                            {
+                                id: user.id,
+                                name: user.name,
+                                phone: user.phone,
+                                grade: user.grade,
+                                subject: subject,
+                                time: timeStr,
+                                locationLink: locationLink,
+                                isOutlier: isOutlier
+                            }
+                        ]
+                    })
+                });
+
+                statusMsg.style.color = "var(--accent-green)";
+                statusMsg.textContent = "✅ تم تسجيل حضورك بنجاح وحفظه في الشيت!";
+                alert("🎉 تم تسجيل حضورك بنجاح وسُجل في جوجل شيت سحابياً!");
+                setTimeout(() => { window.location.href = 'subjects.html'; }, 1500);
+
+            } catch (e) {
+                console.error(e);
+                statusMsg.style.color = "var(--accent-red)";
+                statusMsg.textContent = "❌ حدث خطأ أثناء الاتصال بالـ SheetDB.";
+            }
         }
     </script>
 </body>
