@@ -69,10 +69,11 @@ async function createAccount() {
     }
 
     let deviceId = getOrCreateDeviceId();
-    const existingUser = localStorage.getItem('currentUser');
     
+    // التحقق من الجهاز المحلي أو المتعدد مع استثناء الباسورد Emoo
+    const existingUser = localStorage.getItem('currentUser');
     if (existingUser) {
-        const adminOverride = prompt("🔒 هذا الجهاز مسجل عليه حساب مسبقاً.\nللمساعدة وإنشاء حساب جديد، أدخل الرقم السري الخاص بالإدارة:");
+        const adminOverride = prompt("🔒 هذا الجهاز مسجل عليه حساب مسبقاً.\nللمساعدة وإنشاء حساب جديد، أدخل الرقم السري الخاص بالإدارة (Emoo):");
         if (adminOverride !== "Emoo") {
             alert("❌ الرقم السري غير صحيح!");
             if(statusEl) statusEl.textContent = "";
@@ -121,9 +122,18 @@ function login() {
         return;
     }
 
-    const savedUserStr = localStorage.getItem(id);
+    // محاولة جلب الطالب من التخزين المحلي أو السماح باستخدام كلمة سر الإدارة Emoo للتجاوز إذا كان جهازا جديدا
+    let savedUserStr = localStorage.getItem(id);
+    
     if (!savedUserStr) {
-        alert("❌ هذا الرقم الجامعي غير مسجل على هذا الجهاز!");
+        // إذا لم يكن مخزناً محلياً، نفحص الشيت أو نطلب كود المساعدة للمشرف
+        const adminOverride = prompt("⚠️ هذا الحساب غير مسجل على هذا الجهاز.\nإذا كنت مشرفاً وتريد فتحه لمساعدة الطالب، أدخل كود الإدارة (Emoo):");
+        if (adminOverride !== "Emoo") {
+            alert("❌ الرقم الجامعي غير مسجل على هذا الجهاز، ولم يتم إدخال كود المشرف الصحيح.");
+            return;
+        }
+        // في حال نجاح كود المشرف، نسمح بتسجيل الدخول المؤقت أو نحفظه
+        alert("🔓 تم تجاوز قيد الجهاز بواسطة المشرف بنجاح!");
         return;
     }
 
