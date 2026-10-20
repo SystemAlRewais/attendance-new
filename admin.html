@@ -15,12 +15,12 @@
             <h3>🔘 التحكم في حالة النظام (سحابياً)</h3>
             <p>اضغط على أي زرار لتغيير حالته فوراً في الشيت وعند الطلاب:</p>
             
-            <button id="toggleAttendanceBtn" class="btn" style="background-color: #28a745; margin-bottom: 10px;" onclick="toggleAttendance()">
-                🟢 الحضور: مفتوح (اضغط للإغلاق)
+            <button id="toggleAttendanceBtn" class="btn" style="background-color: #28a745; margin-bottom: 15px; font-weight: bold; padding: 12px;" onclick="handleToggleAttendance()">
+                🔄 جاري جلب حالة الحضور...
             </button>
 
-            <button id="toggleRegistrationBtn" class="btn" style="background-color: #28a745; margin-bottom: 10px;" onclick="toggleRegistration()">
-                🟢 إنشاء الحسابات: مفتوح (اضغط للإغلاق)
+            <button id="toggleRegistrationBtn" class="btn" style="background-color: #28a745; margin-bottom: 15px; font-weight: bold; padding: 12px;" onclick="handleToggleRegistration()">
+                🔄 جاري جلب حالة التسجيل...
             </button>
         </div>
 
@@ -30,94 +30,88 @@
             <button class="btn" onclick="saveSubject()">تحديث المادة سحابياً</button>
         </div>
 
-        <div class="card">
-            <h3>📊 سجل الحضور العام</h3>
-            <button class="btn btn-secondary" onclick="loadAttendanceLogs()">تحديث سجل الحضور</button>
-            <div id="attendanceTableContainer" style="margin-top: 15px; overflow-x: auto;">
-                <p>جاري تحميل السجل...</p>
-            </div>
-        </div>
-
         <button class="btn btn-secondary" onclick="window.location.href='subjects.html'">العودة للرئيسية</button>
     </div>
 
     <script src="script.js"></script>
     <script>
-        // التثبت من كلمة سر الإدارة عند الدخول
+        let isAttendanceOpenState = true;
+        let isRegistrationOpenState = true;
+
+        // عند فتح الصفحة
         window.onload = async function() {
-            const pass = prompt("🔑 أدخل كلمة سر الإدارة للوصول للوحة التحكم:");
+            const pass = prompt("🔑 أدخل كلمة سر الإدارة:");
             if (pass !== "Emoo") {
                 alert("❌ كلمة السر غير صحيحة!");
                 window.location.href = "index.html";
                 return;
             }
-            refreshAdminUI();
+            await initAdminButtons();
         };
 
-        let currentSettings = {
-            isAttendanceOpen: 'true',
-            isRegistrationOpen: 'true',
-            currentSubject: 'المحاضرة الأولى'
-        };
-
-        // تحديث واجهة الأزرار من الشيت
-        async function refreshAdminUI() {
-            currentSettings = await fetchAppSettings();
+        // تحميل الحالة الحقيقية من الشيت وتحديث أشكال الأزرار
+        async function initAdminButtons() {
+            const settings = await fetchAppSettings();
             
+            isAttendanceOpenState = (settings.isAttendanceOpen === 'true');
+            isRegistrationOpenState = (settings.isRegistrationOpen === 'true');
+
+            updateButtonsUI();
+
+            if (settings.currentSubject) {
+                document.getElementById('adminSubjectInput').value = settings.currentSubject;
+            }
+        }
+
+        // تحديث ألوان ونصوص الأزرار
+        function updateButtonsUI() {
             const attBtn = document.getElementById('toggleAttendanceBtn');
             const regBtn = document.getElementById('toggleRegistrationBtn');
-            const subInput = document.getElementById('adminSubjectInput');
 
-            if (currentSettings.isAttendanceOpen === 'true') {
+            if (isAttendanceOpenState) {
                 attBtn.style.backgroundColor = '#28a745';
-                attBtn.textContent = '🟢 الحضور: مفتوح (اضغط للإغلاق)';
+                attBtn.textContent = '🟢 الحضور: مفتوح (اضغط لإغلاقه)';
             } else {
                 attBtn.style.backgroundColor = '#dc3545';
-                attBtn.textContent = '🔴 الحضور: مغلق (اضغط للفتح)';
+                attBtn.textContent = '🔴 الحضور: مغلق (اضغط لفتحه)';
             }
 
-            if (currentSettings.isRegistrationOpen === 'true') {
+            if (isRegistrationOpenState) {
                 regBtn.style.backgroundColor = '#28a745';
-                regBtn.textContent = '🟢 إنشاء الحسابات: مفتوح (اضغط للإغلاق)';
+                regBtn.textContent = '🟢 إنشاء الحسابات: مفتوح (اضغط لإغلاقه)';
             } else {
                 regBtn.style.backgroundColor = '#dc3545';
-                regBtn.textContent = '🔴 إنشاء الحسابات: مغلق (اضغط للفتح)';
+                regBtn.textContent = '🔴 إنشاء الحسابات: مغلق (اضغط لفتحه)';
             }
-
-            if (subInput && currentSettings.currentSubject) {
-                subInput.value = currentSettings.currentSubject;
-            }
-
-            loadAttendanceLogs();
         }
 
-        // تبديل حالة الحضور (فتح / إغلاق)
-        async function toggleAttendance() {
+        // إرسال أمر إغلاق/فتح الحضور للشيت
+        async function handleToggleAttendance() {
             const attBtn = document.getElementById('toggleAttendanceBtn');
-            attBtn.textContent = "جاري التحديث سحابياً...";
+            attBtn.textContent = "⏳ جاري الإرسال للشيت...";
             
-            const newStatus = currentSettings.isAttendanceOpen === 'true' ? 'false' : 'true';
-            await updateAppSetting('isAttendanceOpen', newStatus);
-            currentSettings.isAttendanceOpen = newStatus;
-            
-            refreshAdminUI();
-            alert(`تم ${newStatus === 'true' ? 'فتح' : 'إغلاق'} الحضور سحابياً بنجاح!`);
+            isAttendanceOpenState = !isAttendanceOpenState;
+            const newValueStr = isAttendanceOpenState ? 'TRUE' : 'FALSE';
+
+            await updateAppSetting('isAttendanceOpen', newValueStr);
+            updateButtonsUI();
+            alert(`تم تغيير حالة الحضور في الشيت إلى: ${newValueStr}`);
         }
 
-        // تبديل حالة إنشاء الحسابات (فتح / إغلاق)
-        async function toggleRegistration() {
+        // إرسال أمر إغلاق/فتح التسجيل للشيت
+        async function handleToggleRegistration() {
             const regBtn = document.getElementById('toggleRegistrationBtn');
-            regBtn.textContent = "جاري التحديث سحابياً...";
+            regBtn.textContent = "⏳ جاري الإرسال للشيت...";
             
-            const newStatus = currentSettings.isRegistrationOpen === 'true' ? 'false' : 'true';
-            await updateAppSetting('isRegistrationOpen', newStatus);
-            currentSettings.isRegistrationOpen = newStatus;
-            
-            refreshAdminUI();
-            alert(`تم ${newStatus === 'true' ? 'فتح' : 'إغلاق'} إنشاء الحسابات سحابياً بنجاح!`);
+            isRegistrationOpenState = !isRegistrationOpenState;
+            const newValueStr = isRegistrationOpenState ? 'TRUE' : 'FALSE';
+
+            await updateAppSetting('isRegistrationOpen', newValueStr);
+            updateButtonsUI();
+            alert(`تم تغيير حالة التسجيل في الشيت إلى: ${newValueStr}`);
         }
 
-        // حفظ المادة الحالية سحابياً
+        // حفظ اسم المادة
         async function saveSubject() {
             const subVal = document.getElementById('adminSubjectInput').value.trim();
             if (!subVal) {
@@ -125,48 +119,7 @@
                 return;
             }
             await updateAppSetting('currentSubject', subVal);
-            alert("تم تحديث اسم المادة سحابياً بنجاح!");
-        }
-
-        // تحميل كشف الحضور من الشيت
-        async function loadAttendanceLogs() {
-            const container = document.getElementById('attendanceTableContainer');
-            try {
-                const response = await fetch(sheetDbApiUrl + "?sheet=Attendance");
-                const data = await response.json();
-
-                if (!Array.isArray(data) || data.length === 0) {
-                    container.innerHTML = "<p>لا يوجد سجلات حضور حتى الآن.</p>";
-                    return;
-                }
-
-                let html = `<table border="1" style="width:100%; text-align:center; border-collapse:collapse;">
-                    <thead>
-                        <tr style="background-color:#f2f2f2;">
-                            <th>ID</th>
-                            <th>الاسم</th>
-                            <th>المادة</th>
-                            <th>الوقت</th>
-                            <th>الموقع</th>
-                        </tr>
-                    </thead>
-                    <tbody>`;
-
-                data.reverse().forEach(row => {
-                    html += `<tr>
-                        <td>${row.id || '-'}</td>
-                        <td>${row.name || '-'}</td>
-                        <td>${row.subject || '-'}</td>
-                        <td>${row.time || '-'}</td>
-                        <td><a href="${row.locationLink}" target="_blank">رابط الخريطة</a></td>
-                    </tr>`;
-                });
-
-                html += `</tbody></table>`;
-                container.innerHTML = html;
-            } catch (err) {
-                container.innerHTML = "<p>حدث خطأ أثناء تحميل السجل سحابياً.</p>";
-            }
+            alert("تم تحديث اسم المادة في الشيت بنجاح!");
         }
     </script>
 </body>
