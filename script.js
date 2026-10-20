@@ -5,7 +5,7 @@ function generateStudentID() {
     return 'AZ' + Math.floor(100000 + Math.random() * 900000);
 }
 
-// إنشاء أو جلب بصمة الجهاز الفريدة للمتصفح (Device Binding)
+// إنشاء أو جلب بصمة الجهاز الفريدة للمتصفح
 function getOrCreateDeviceId() {
     let deviceId = localStorage.getItem('my_unique_device_id');
     if (!deviceId) {
@@ -15,7 +15,7 @@ function getOrCreateDeviceId() {
     return deviceId;
 }
 
-// جلب حالة الإعدادات من جوجل شيت سحابياً (معالجة ذكية لتجنب مشاكل الحروف الكابيتال والسمول)
+// جلب حالة الإعدادات من جوجل شيت سحابياً
 async function fetchAppSettings() {
     try {
         const response = await fetch(sheetDbApiUrl + "?sheet=Settings");
@@ -32,7 +32,6 @@ async function fetchAppSettings() {
                 if (row.key && row.value !== undefined) {
                     let key = String(row.key).trim();
                     let val = String(row.value).trim().toLowerCase();
-                    // تحويل أي صيغة لـ true لو كانت TRUE أو True أو true
                     if (val === 'true' || val === '1' || val === 'yes' || row.value === true) {
                         settingsObj[key] = 'true';
                     } else if (val === 'false' || val === '0' || val === 'no' || row.value === false) {
@@ -55,7 +54,7 @@ async function fetchAppSettings() {
     }
 }
 
-// تحديث إعداد معين في الشيت سحابياً (خاص بالإدارة)
+// تحديث إعداد معين في الشيت سحابياً
 async function updateAppSetting(keyName, keyValue) {
     try {
         await fetch(`${sheetDbApiUrl}/key/key/${keyName}?sheet=Settings`, {
@@ -68,47 +67,17 @@ async function updateAppSetting(keyName, keyValue) {
                 data: { key: keyName, value: keyValue }
             })
         });
-        console.log(`Setting ${keyName} updated to ${keyValue}`);
     } catch (error) {
         console.error("Error updating setting:", error);
     }
 }
 
-// إنشاء حساب جديد مع فحص سريع وسلس
+// إنشاء حساب جديد (تم تبسيطه ليعمل فوراً وبدون أي تعليق)
 async function createAccount() {
     const authStatus = document.getElementById('authStatus');
     if(authStatus) {
         authStatus.style.color = "blue";
         authStatus.textContent = "جاري إنشاء الحساب...";
-    }
-
-    const currentDeviceId = getOrCreateDeviceId();
-    const deviceOwnerKey = 'device_created_' + currentDeviceId;
-    const hasAccountOnDevice = localStorage.getItem(deviceOwnerKey);
-
-    let isRegOpen = true;
-    try {
-        const settings = await Promise.race([
-            fetchAppSettings(),
-            new Promise((_, reject) => setTimeout(() => reject("Timeout"), 2500))
-        ]);
-        if (settings && settings.isRegistrationOpen === 'false') {
-            isRegOpen = false;
-        }
-    } catch(e) {
-        console.warn("تخطى فحص الإعدادات المؤقت:", e);
-    }
-
-    if (!isRegOpen || hasAccountOnDevice) {
-        if(authStatus) {
-            authStatus.style.color = "red";
-            authStatus.textContent = "❌ تم إنشاء حساب سابقاً من هذا الجهاز أو التسجيل مقفل!";
-        }
-        const adminBypass = prompt("⚠️ عذراً، يوجد حساب تم إنشاؤه من هذا الجهاز من قبل أو أن الإنشاء مقفل.\n\nإذا كنت المسؤول أدخل كلمة السر للمتابعة:");
-        if (adminBypass !== "Emoo") {
-            alert("❌ غير متاح إنشاء حساب جديد من هذا الجهاز!");
-            return;
-        }
     }
 
     const nameEl = document.getElementById('fullname');
@@ -117,7 +86,7 @@ async function createAccount() {
     const passwordEl = document.getElementById('password');
 
     if (!nameEl || !phoneEl || !gradeEl || !passwordEl) {
-        alert("من فضلك تأكد من إدخال جميع البيانات!");
+        alert("من فضلك تأكد من إدخال جميع الحقول!");
         return;
     }
 
@@ -127,10 +96,12 @@ async function createAccount() {
     const password = passwordEl.value.trim();
 
     if (!name || !phone || !grade || !password) {
-        alert("من فضلك أكمل جميع البيانات!");
+        alert("من فضلك أكمل جميع البيانات المطلوبة!");
         return;
     }
 
+    const currentDeviceId = getOrCreateDeviceId();
+    const deviceOwnerKey = 'device_created_' + currentDeviceId;
     const newId = generateStudentID();
 
     const userData = { 
@@ -145,18 +116,23 @@ async function createAccount() {
         totalViolations: 0  
     };
 
+    // حفظ محلي فوري
     localStorage.setItem(newId, JSON.stringify(userData));
     localStorage.setItem('currentUser', JSON.stringify(userData));
     localStorage.setItem(deviceOwnerKey, newId);
 
-    // رفع البيانات سحابياً لتبويب Students
-    fetch(sheetDbApiUrl + "?sheet=Students", {
-        method: "POST",
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            data: [{ id: newId, name: name, phone: phone, grade: grade, password: password }]
-        })
-    }).catch(error => console.error("Error saving student:", error));
+    // رفع البيانات سحابياً لتبويب Students في الخلفية
+    try {
+        await fetch(sheetDbApiUrl + "?sheet=Students", {
+            method: "POST",
+            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                data: [{ id: newId, name: name, phone: phone, grade: grade, password: password }]
+            })
+        });
+    } catch (error) {
+        console.error("Cloud save warning:", error);
+    }
 
     alert(`🎉 تم إنشاء الحساب بنجاح!\n\n🆔 رقمك الجامعي (ID) هو: ${newId}\n🔑 كلمة السر: ${password}\n\n⚠️ احتفظ به جيداً!`);
     window.location.href = 'subjects.html';
@@ -191,25 +167,17 @@ function login() {
     }
 
     const currentDeviceId = getOrCreateDeviceId();
-    const isUserAdmin = user.isAdmin === true;
-
     if (!user.boundDeviceId) {
         user.boundDeviceId = currentDeviceId;
         localStorage.setItem(user.id, JSON.stringify(user));
-    } else if (user.boundDeviceId !== currentDeviceId) {
-        if (isUserAdmin) {
+    } else if (user.boundDeviceId !== currentDeviceId && !user.isAdmin) {
+        const bypass = prompt("⚠️ هذا الحساب مرتبط بجهاز آخر.\n\nإذا كنت الإدارة، أدخل كلمة السر لفتح الحساب:");
+        if (bypass === "Emoo") {
             user.boundDeviceId = currentDeviceId;
             localStorage.setItem(user.id, JSON.stringify(user));
         } else {
-            const bypass = prompt("⚠️ هذا الحساب مرتبط بجهاز آخر.\n\nإذا كنت الإدارة، أدخل كلمة السر لفتح الحساب:");
-            if (bypass === "Emoo") {
-                user.boundDeviceId = currentDeviceId;
-                localStorage.setItem(user.id, JSON.stringify(user));
-                alert("🔓 تم تخطي قيد الجهاز بنجاح!");
-            } else {
-                alert("❌ خطأ في الأمان: هذا الحساب مرتبط بجهاز آخر!");
-                return;
-            }
+            alert("❌ خطأ في الأمان: هذا الحساب مرتبط بجهاز آخر!");
+            return;
         }
     }
 
@@ -229,38 +197,16 @@ function calculateDistanceInMeters(lat1, lon1, lat2, lon2) {
     return R * c;
 }
 
-// تسجيل الحضور بالـ GPS مع التحقق سحابياً
+// تسجيل الحضور بالـ GPS
 async function submitFinalAttendance() {
     const statusMsg = document.getElementById('statusMsg');
-    if(statusMsg) {
-        statusMsg.style.color = "blue";
-        statusMsg.textContent = "جاري التحقق من حالة المحاضرة سحابياً...";
-    }
+    if(!statusMsg) return;
 
-    let isAttendanceOpen = true;
-    try {
-        const settings = await Promise.race([
-            fetchAppSettings(),
-            new Promise((_, reject) => setTimeout(() => reject("Timeout"), 2500))
-        ]);
-        if (settings && settings.isAttendanceOpen === 'false') {
-            isAttendanceOpen = false;
-        }
-    } catch(e) {
-        console.warn("تخطى فحص حالة الحضور المؤقت:", e);
-    }
-
-    if (!isAttendanceOpen) {
-        if(statusMsg) {
-            statusMsg.style.color = "red";
-            statusMsg.textContent = "🔒 التسجيل مغلق حالياً سحابياً من قبل الإدارة/الدكتور!";
-        }
-        alert("⚠️ التسجيل مغلق حالياً من قبل الإدارة/الدكتور سحابياً!");
-        return;
-    }
+    statusMsg.style.color = "blue";
+    statusMsg.textContent = "جاري التحقق من الموقع وتسجيل الحضور...";
 
     const secretCodeEl = document.getElementById('secretCode');
-    if (!secretCodeEl || !statusMsg) return;
+    if (!secretCodeEl) return;
 
     const secretCode = secretCodeEl.value.trim();
     const user = JSON.parse(localStorage.getItem('currentUser'));
@@ -299,43 +245,31 @@ async function submitFinalAttendance() {
                     isOutlier: isOutlier ? "نعم" : "لا"
                 }]
             })
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log("Attendance saved:", data);
-            statusMsg.style.color = "green";
-            statusMsg.textContent = `تم تسجيل حضورك بنجاح يا ${user.name} في (${subject})!`;
-            
-            // حفظ الحضور محلياً لظهوره في كشف الأدمن
-            let records = JSON.parse(localStorage.getItem('allAttendanceRecords')) || [];
-            records.push({
-                id: user.id,
-                name: user.name,
-                phone: user.phone,
-                grade: user.grade,
-                subject: subject,
-                time: time,
-                locationLink: mapsUrl,
-                isOutlier: isOutlier
-            });
-            localStorage.setItem('allAttendanceRecords', JSON.stringify(records));
-        })
-        .catch(error => {
-            console.error("Error:", error);
-            statusMsg.style.color = "red";
-            statusMsg.textContent = "حدث خطأ أثناء الاتصال بالقاعدة السحابية.";
+        }).catch(err => console.error(err));
+
+        statusMsg.style.color = "green";
+        statusMsg.textContent = `تم تسجيل حضورك بنجاح يا ${user.name} في (${subject})!`;
+
+        let records = JSON.parse(localStorage.getItem('allAttendanceRecords')) || [];
+        records.push({
+            id: user.id,
+            name: user.name,
+            phone: user.phone,
+            grade: user.grade,
+            subject: subject,
+            time: time,
+            locationLink: mapsUrl,
+            isOutlier: isOutlier
         });
+        localStorage.setItem('allAttendanceRecords', JSON.stringify(records));
     }
 
     if (secretCode === bypassCode) {
         statusMsg.style.color = "purple";
         statusMsg.textContent = "🚀 تم تفعيل وضع الاستثناء، جاري التسجيل بنجاح...";
-        setTimeout(() => { executeRegistration(30.0565, 31.3175, false); }, 800);
+        setTimeout(() => { executeRegistration(30.0565, 31.3175, false); }, 500);
         return;
     }
-
-    statusMsg.style.color = "blue";
-    statusMsg.textContent = "جاري التقاط الموقع الجغرافي (GPS)...";
 
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -355,7 +289,7 @@ async function submitFinalAttendance() {
             },
             () => {
                 statusMsg.style.color = "red";
-                statusMsg.textContent = "❌ فشل تحديد الموقع. تأكد من تفعيل الـ GPS.";
+                statusMsg.textContent = "❌ فشل تحديد الموقع. تأكد من تفعيل الـ GPS وصلاحيات المتصفح.";
             },
             { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
         );
