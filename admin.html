@@ -3,151 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم السحابية - كلية الإعلام</title>
+    <title>لوحة تحكم الإدارة - نظام الحضور</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container" style="max-width: 650px;">
-        <div class="admin-badge">⚡ لوحة الإدارة العليا</div>
-        <h2>إدارة النظام السحابي</h2>
-        <p id="adminWelcome">تحكم لحظي في الحالة الأكاديمية وقاعدة البيانات</p>
+    <div class="container" style="max-width: 600px;">
+        <div class="admin-badge" style="background: rgba(239, 68, 68, 0.1); color: var(--accent-red);">🔐 لوحة الإدارة العليا</div>
+        <h2>تحكم النظام</h2>
+        <p style="color: var(--text-sub); font-size: 14px; margin-bottom: 20px;">التحكم اللحظي في حالة التسجيل، الحضور، وتغيير المحاضرة الحالية.</p>
 
-        <div class="card">
-            <h3>🔘 حالة بوابات النظام (سحابياً)</h3>
-            <button id="toggleAttendanceBtn" class="btn" style="background-color: #10b981; margin-bottom: 12px; font-weight: bold; padding: 12px;" onclick="handleToggleAttendance()">
-                🔄 جاري جلب حالة الحضور...
-            </button>
-
-            <button id="toggleRegistrationBtn" class="btn" style="background-color: #10b981; margin-bottom: 12px; font-weight: bold; padding: 12px;" onclick="handleToggleRegistration()">
-                🔄 جاري جلب حالة التسجيل...
-            </button>
+        <div class="input-group">
+            <label>عنوان المحاضرة الحالية:</label>
+            <input type="text" id="adminCurrentSubject" placeholder="مثال: المحاضرة الأولى - مقدمة في الإعلام">
         </div>
 
-        <div class="card">
-            <h3>📚 المادة والمحاضرة الحالية</h3>
-            <div class="input-group">
-                <input type="text" id="adminSubjectInput" placeholder="أدخل اسم المحاضرة النشطة حالياً">
-            </div>
-            <button class="btn" onclick="saveSubject()">تحديث اسم المادة سحابياً</button>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button type="button" class="btn" onclick="toggleSetting('isAttendanceOpen', 'true')" style="background: var(--accent-green);">فتح الحضور</button>
+            <button type="button" class="btn" onclick="toggleSetting('isAttendanceOpen', 'false')" style="background: var(--accent-red);">إغلاق الحضور</button>
         </div>
 
-        <div class="card">
-            <h3>👥 قاعدة بيانات الطلاب المسجلين سحابياً</h3>
-            <button class="btn" style="background-color: #0ea5e9; margin-bottom: 12px;" onclick="loadStudentsTable()">🔄 تحميل/تحديث جدول الطلاب</button>
-            <div style="max-height: 250px; overflow-y: auto;">
-                <table id="studentsTable">
-                    <tr>
-                        <th>ID</th>
-                        <th>الاسم</th>
-                        <th>الهاتف</th>
-                        <th>الفرقة</th>
-                        <th>الباسورد</th>
-                    </tr>
-                </table>
-            </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button type="button" class="btn" onclick="toggleSetting('isRegistrationOpen', 'true')" style="background: var(--accent-green);">فتح التسجيل</button>
+            <button type="button" class="btn" onclick="toggleSetting('isRegistrationOpen', 'false')" style="background: var(--accent-red);">إغلاق التسجيل</button>
         </div>
 
-        <button class="btn btn-secondary" onclick="window.location.href='subjects.html'">العودة لمنصة المواد</button>
+        <button type="button" class="btn" onclick="saveAdminSettings()" style="background: #4f46e5; margin-bottom: 15px;">💾 حفظ وتحديث الإعدادات سحابياً</button>
+
+        <p id="adminStatusMsg" class="status-msg"></p>
+
+        <button type="button" class="btn btn-secondary" onclick="window.location.href='subjects.html'">العودة للمواد</button>
     </div>
 
     <script src="script.js"></script>
     <script>
-        let isAttendanceOpenState = true;
-        let isRegistrationOpenState = true;
-
+        // حماية صفحة الإدارة بكلمة السر Emoo
         window.onload = async function() {
-            const pass = prompt("🔑 أدخل كلمة سر الإدارة:");
+            const pass = prompt("🔐 أدخل كلمة سر الإدارة (Emoo) للدخول للوحة التحكم:");
             if (pass !== "Emoo") {
                 alert("❌ كلمة السر غير صحيحة!");
-                window.location.href = "index.html";
+                window.location.href = 'subjects.html';
                 return;
             }
-            await initAdminButtons();
-            await loadStudentsTable();
-        };
 
-        async function initAdminButtons() {
             try {
                 const settings = await fetchAppSettings();
-                isAttendanceOpenState = (String(settings.isAttendanceOpen).trim() === 'true');
-                isRegistrationOpenState = (String(settings.isRegistrationOpen).trim() === 'true');
-                updateButtonsUI();
-
-                if (settings.currentSubject) {
-                    document.getElementById('adminSubjectInput').value = settings.currentSubject;
+                if(settings && settings.currentSubject) {
+                    document.getElementById('adminCurrentSubject').value = settings.currentSubject;
                 }
-            } catch (err) {
-                console.error("Error init buttons:", err);
+            } catch(e) {
+                console.error(e);
             }
+        };
+
+        async function toggleSetting(key, value) {
+            await updateAdminSettingDirect(key, value);
         }
 
-        function updateButtonsUI() {
-            const attBtn = document.getElementById('toggleAttendanceBtn');
-            const regBtn = document.getElementById('toggleRegistrationBtn');
-
-            if (isAttendanceOpenState) {
-                attBtn.style.backgroundColor = '#10b981';
-                attBtn.textContent = '🟢 الحضور: مفتوح (اضغط للإغلاق)';
-            } else {
-                attBtn.style.backgroundColor = '#ef4444';
-                attBtn.textContent = '🔴 الحضور: مغلق (اضغط للفتح)';
-            }
-
-            if (isRegistrationOpenState) {
-                regBtn.style.backgroundColor = '#10b981';
-                regBtn.textContent = '🟢 إنشاء الحسابات: مفتوح (اضغط للإغلاق)';
-            } else {
-                regBtn.style.backgroundColor = '#ef4444';
-                regBtn.textContent = '🔴 إنشاء الحسابات: مغلق (اضغط للفتح)';
-            }
-        }
-
-        async function handleToggleAttendance() {
-            isAttendanceOpenState = !isAttendanceOpenState;
-            const newValueStr = isAttendanceOpenState ? 'true' : 'false';
-            await updateAppSetting('isAttendanceOpen', newValueStr);
-            updateButtonsUI();
-            alert(`تم تغيير حالة الحضور إلى: ${newValueStr === 'true' ? 'مفتوح' : 'مغلق'}`);
-        }
-
-        async function handleToggleRegistration() {
-            isRegistrationOpenState = !isRegistrationOpenState;
-            const newValueStr = isRegistrationOpenState ? 'true' : 'false';
-            await updateAppSetting('isRegistrationOpen', newValueStr);
-            updateButtonsUI();
-            alert(`تم تغيير حالة التسجيل إلى: ${newValueStr === 'true' ? 'مفتوح' : 'مغلق'}`);
-        }
-
-        async function saveSubject() {
-            const subVal = document.getElementById('adminSubjectInput').value.trim();
-            if (!subVal) {
-                alert("يرجى إدخال اسم المادة!");
+        async function saveAdminSettings() {
+            const subjectVal = document.getElementById('adminCurrentSubject').value.trim();
+            if(!subjectVal) {
+                alert("يرجى كتابة عنوان المحاضرة!");
                 return;
             }
-            await updateAppSetting('currentSubject', subVal);
-            alert("تم تحديث اسم المحاضرة بنجاح!");
+            await updateAdminSettingDirect('currentSubject', subjectVal);
         }
 
-        async function loadStudentsTable() {
-            const table = document.getElementById('studentsTable');
-            table.innerHTML = `<tr><th>ID</th><th>الاسم</th><th>الهاتف</th><th>الفرقة</th><th>الباسورد</th></tr>`;
-            
-            const rows = await fetchAllStudents();
-            if (rows && rows.length > 1) {
-                for (let i = 1; i < rows.length; i++) {
-                    const r = rows[i];
-                    if(r[0]) {
-                        table.innerHTML += `<tr>
-                            <td>${r[0]}</td>
-                            <td>${r[1]}</td>
-                            <td>${r[2]}</td>
-                            <td>${r[3]}</td>
-                            <td>${r[4]}</td>
-                        </tr>`;
-                    }
-                }
-            } else {
-                table.innerHTML += `<tr><td colspan="5">لا توجد بيانات طلاب مسجلة بعد</td></tr>`;
+        async function updateAdminSettingDirect(key, value) {
+            const statusMsg = document.getElementById('adminStatusMsg');
+            statusMsg.style.color = "#38bdf8";
+            statusMsg.textContent = "⏳ جاري التحديث عبر SheetDB...";
+
+            try {
+                await fetch(sheetDBUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        data: [
+                            {
+                                [key]: value
+                            }
+                        ]
+                    })
+                });
+
+                statusMsg.style.color = "var(--accent-green)";
+                statusMsg.textContent = `✅ تم تحديث (${key}) إلى (${value}) بنجاح!`;
+                alert(`🎉 تم تحديث الإعدادات بنجاح!`);
+            } catch (e) {
+                console.error(e);
+                statusMsg.style.color = "var(--accent-red)";
+                statusMsg.textContent = "❌ حدث خطأ أثناء التحديث.";
             }
         }
     </script>
