@@ -10,7 +10,6 @@
     <div class="container" style="max-width: 800px;">
         <div class="admin-badge" style="background: rgba(239, 68, 68, 0.1); color: var(--accent-red);">🔐 لوحة الإدارة العليا</div>
         <h2>لوحة التحكم والتحكم السحابي</h2>
-        <p style="color: var(--text-sub); font-size: 14px; margin-bottom: 20px;">التحكم الكامل في الحضور، التسجيل، المواد، وإدارة بيانات الطلاب.</p>
 
         <!-- الإعدادات العامة -->
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
@@ -76,9 +75,10 @@
     <script src="script.js"></script>
     <script>
         window.onload = async function() {
-            const pass = prompt("🔐 أدخل الرقم السري للإدارة (44554455):");
+            // كود الإدارة لدخول لوحة التحكم: 44554455 بدون إظهاره
+            const pass = prompt("🔐 أدخل الرقم السري الخاص بالإدارة:");
             if (pass !== "44554455") {
-                alert("❌ الرقم السري خطأ!");
+                alert("❌ الرقم السري غير صحيح!");
                 window.location.href = 'subjects.html';
                 return;
             }
@@ -119,12 +119,12 @@
                 await fetch(sheetDBUrl, {
                     method: 'POST',
                     headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                    body: JSON.stringify(currentSettings)
+                    body: JSON.stringify({ data: [currentSettings] })
                 });
 
                 statusMsg.style.color = "var(--accent-green)";
-                statusMsg.textContent = `✅ تم تحديث (${key}) إلى (${value}) بنجاح!`;
-                alert(`🎉 تم تحديث الإعدادات (الحالة: ${value}) بنجاح!`);
+                statusMsg.textContent = `✅ تم تحديث الإعدادات بنجاح!`;
+                alert(`🎉 تم حفظ التحديثات بنجاح!`);
             } catch (e) {
                 console.error(e);
                 statusMsg.style.color = "var(--accent-red)";
@@ -165,12 +165,12 @@
                 await fetch(sheetDBUrl, {
                     method: 'POST',
                     headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                    body: JSON.stringify(studentData)
+                    body: JSON.stringify({ data: [studentData] })
                 });
                 alert(`🎉 تم إضافة الطالب بنجاح!\nالرقم الجامعي: ${newId}`);
                 loadStudentsList();
             } catch(e) {
-                alert("تم الحفظ محلياً، تأكد من الاتصال.");
+                alert("تم الحفظ محلياً.");
             }
         }
 
@@ -214,7 +214,6 @@
         async function deleteStudentRow(studentId) {
             if(confirm(`هل أنت متأكد من حذف الطالب ذو الـ ID: ${studentId}؟`)) {
                 try {
-                    // SheetDB DELETE request by column id
                     await fetch(`${sheetDBUrl}/id/${studentId}`, { method: 'DELETE' });
                     localStorage.removeItem(studentId);
                     alert("🗑️ تم الحذف بنجاح!");
@@ -226,7 +225,7 @@
         }
 
         async function editStudentRow(studentId, currentName) {
-            const newName = prompt(`تعديل اسم الطالب (ID: ${studentId}):`, currentName);
+            const newName = prompt(`تعديل اسم الطالب:`, currentName);
             if(newName) {
                 try {
                     await fetch(`${sheetDBUrl}/id/${studentId}`, {
