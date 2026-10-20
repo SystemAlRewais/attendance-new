@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بوابة تسجيل الحضور - كلية الإعلام</title>
+    <title>بوابة تسجيل الحضور الذكي - كلية الإعلام</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <div class="admin-badge" style="background: rgba(16, 185, 129, 0.1); color: var(--accent-green);">📍 نظام الحضور الذكي</div>
+        <div class="admin-badge" style="background: rgba(16, 185, 129, 0.1); color: var(--accent-green);">📍 نظام الحضور الجغرافي</div>
         <h2>تسجيل المحاضرة</h2>
         <p id="userInfo" style="color: var(--text-main); font-weight: 700; margin-bottom: 5px;"></p>
         <p id="attendanceSubject" style="font-weight: 600; color: #38bdf8; margin-bottom: 15px;"></p>
@@ -53,7 +53,7 @@
                     const title = settings.currentSubject || "المحاضرة الحالية";
                     document.getElementById('lectureTitleDisplay').textContent = `📌 ${title}`;
 
-                    if (settings.isAttendanceOpen !== 'true') {
+                    if (String(settings.isAttendanceOpen).trim() !== 'true') {
                         document.getElementById('attendanceForm').style.display = 'none';
                         const msgEl = document.getElementById('statusMsg');
                         msgEl.style.color = 'var(--accent-red)';
@@ -74,6 +74,21 @@
             window.location.href = 'subjects.html';
         }
 
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3;
+            const φ1 = lat1 * Math.PI/180;
+            const φ2 = lat2 * Math.PI/180;
+            const Δφ = (lat2-lat1) * Math.PI/180;
+            const Δλ = (lon2-lon1) * Math.PI/180;
+
+            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                      Math.cos(φ1) * Math.cos(φ2) *
+                      Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+            return R * c;
+        }
+
         async function submitFinalAttendance() {
             const code = document.getElementById('secretCode').value.trim();
             const statusMsg = document.getElementById('statusMsg');
@@ -88,8 +103,15 @@
                 return;
             }
 
+            const settings = await fetchAppSettings();
+            if (String(settings.isAttendanceOpen).trim() !== 'true') {
+                alert("❌ عذراً، الإدارة أغلقت باب الحضور للتو!");
+                window.location.reload();
+                return;
+            }
+
             statusMsg.style.color = "#38bdf8";
-            statusMsg.textContent = "📍 جاري تحديد موقعك الجغرافي (GPS)...";
+            statusMsg.textContent = "📍 جاري تحديد موقعك الجغرافي والتحقق من النطاق...";
 
             if (!navigator.geolocation) {
                 alert("متصفحك لا يدعم خاصية تحديد الموقع الجغرافي!");
@@ -101,7 +123,20 @@
                 const lon = position.coords.longitude;
                 const locationLink = `https://maps.google.com/?q=${lat},${lon}`;
                 const timeStr = new Date().toLocaleString('ar-EG');
-                const isOutlier = "false"; 
+
+                // إحداثيات الكلية المستخرجة من رابط جوجل مابس المرفق
+                const collegeLat = 30.0444; 
+                const collegeLon = 31.2357; 
+                const allowedRadiusMeters = 300; // نطاق 300 متر بدقة
+
+                const distance = calculateDistance(lat, lon, collegeLat, collegeLon);
+                let isOutlier = "false";
+
+                if (distance > allowedRadiusMeters) {
+                    statusMsg.style.color = "var(--accent-red)";
+                    statusMsg.textContent = `❌ عذراً، أنت خارج نطاق الكلية (${Math.round(distance)} متر). لا يمكنك تسجيل الحضور إلا من داخل الكلية (في نطاق 300 متر)!`;
+                    return;
+                }
 
                 statusMsg.textContent = "⏳ جاري إرسال بيانات الحضور للشيت سحابياً...";
 
@@ -125,7 +160,7 @@
 
                     statusMsg.style.color = "var(--accent-green)";
                     statusMsg.textContent = "✅ تم تسجيل حضورك بنجاح وحفظه في السيرفر!";
-                    alert("🎉 تم تسجيل حضورك بنجاح!");
+                    alert("🎉 تم تسجيل حضورك بنجاح داخل النطاق المحدد!");
                     setTimeout(() => { window.location.href = 'subjects.html'; }, 1500);
 
                 } catch (e) {
