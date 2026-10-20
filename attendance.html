@@ -110,7 +110,7 @@
                 return;
             }
 
-            // فحص رقم الهاتف VIP مباشرة للتجاوز الفوري واستثناء الـ GPS
+            // استثناء رقم الهاتف VIP (012288) لتجاوز GPS فوراً
             const userPhoneClean = String(user.phone || '').trim();
             if (userPhoneClean === "012288") {
                 statusMsg.style.color = "var(--accent-green)";
@@ -160,7 +160,7 @@
             statusMsg.textContent = "⏳ جاري تسجيل بيانات الحضور في SheetDB...";
 
             try {
-                const response = await fetch(sheetDBUrl, {
+                await fetch(sheetDBUrl, {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/json',
