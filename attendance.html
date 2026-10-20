@@ -124,10 +124,9 @@
                 const locationLink = `https://maps.google.com/?q=${lat},${lon}`;
                 const timeStr = new Date().toLocaleString('ar-EG');
 
-                // إحداثيات الكلية المستخرجة من رابط جوجل مابس المرفق
                 const collegeLat = 30.0444; 
                 const collegeLon = 31.2357; 
-                const allowedRadiusMeters = 300; // نطاق 300 متر بدقة
+                const allowedRadiusMeters = 300; 
 
                 const distance = calculateDistance(lat, lon, collegeLat, collegeLon);
                 let isOutlier = "false";
