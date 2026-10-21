@@ -1,5 +1,7 @@
-const sheetDBUrl = "https://sheetdb.io/api/v1/851i0cwulmnso";
+// ⚠️ ضع رابط Google Apps Script الخاص بك (الذي ينتهي بـ /exec) بين التنصيص
+const googleScriptUrl = "ضع_رابط_جوجل_اسكريبت_هنا_أخرة_exec";
 
+// جلب أو إنشاء معرف الجهاز الفريد
 function getOrCreateDeviceId() {
     let deviceId = localStorage.getItem('my_unique_device_id');
     if (!deviceId) {
@@ -9,35 +11,35 @@ function getOrCreateDeviceId() {
     return deviceId;
 }
 
+// إنشاء رقم جامعي تلقائي
 function generateStudentID() {
     return 'AZ' + Math.floor(100000 + Math.random() * 900000);
 }
 
+// جلب إعدادات التطبيق والمادة الحالية سحابياً
 async function fetchAppSettings() {
     try {
-        const response = await fetch(`${sheetDBUrl}?sheet=Setting`, { cache: "no-store" });
-        const data = await response.json();
-        if (Array.isArray(data) && data.length > 0) {
-            return data[data.length - 1];
-        }
-    } catch (error) {}
-    return { isAttendanceOpen: 'true', currentSubject: 'المحاضرة الأولى', selectedSubject: 'نشأة وسائل الاتصال - د. مصطفى مندي' };
+        const res = await fetch(`${googleScriptUrl}?action=getSettings`);
+        return await res.json();
+    } catch (e) {
+        return { isAttendanceOpen: 'true', currentSubject: 'المحاضرة الأولى', selectedSubject: 'نشأة وسائل الاتصال - د. مصطفى مندي' };
+    }
 }
 
+// جلب قائمة الطلاب الكاملة من السحابة
 async function fetchAllStudentsFromSheet() {
     try {
-        const response = await fetch(`${sheetDBUrl}?sheet=students`, { cache: "no-store" });
-        const data = await response.json();
-        if (Array.isArray(data)) {
-            return data;
-        }
-    } catch (error) {}
-    return [];
+        const res = await fetch(`${googleScriptUrl}?action=getStudents`);
+        return await res.json();
+    } catch (e) {
+        return [];
+    }
 }
 
+// إنشاء حساب طالب جديد وإرساله للسحابة
 async function createAccount() {
     const statusEl = document.getElementById('authStatus');
-    if(statusEl) {
+    if (statusEl) {
         statusEl.style.color = "#38bdf8";
         statusEl.textContent = "⏳ جاري إنشاء الحساب...";
     }
@@ -49,37 +51,34 @@ async function createAccount() {
 
     if (!name || !phone || !grade || !password) {
         alert("⚠️ يرجى إكمال جميع الحقول المطلوبة!");
-        if(statusEl) statusEl.textContent = "";
+        if (statusEl) statusEl.textContent = "";
         return;
     }
 
-    let deviceId = getOrCreateDeviceId();
     const newId = generateStudentID();
     const userData = {
+        action: "createStudent",
         id: newId,
         name: name,
         phone: phone,
         grade: grade,
         password: password,
-        attendanceCount: 0,
-        boundDeviceId: deviceId
+        boundDeviceId: getOrCreateDeviceId()
     };
 
     localStorage.setItem(newId, JSON.stringify(userData));
     localStorage.setItem('currentUser', JSON.stringify(userData));
 
-    try {
-        await fetch(`${sheetDBUrl}?sheet=students`, {
-            method: 'POST',
-            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data: [userData] })
-        });
-    } catch (e) {}
+    await fetch(googleScriptUrl, {
+        method: 'POST',
+        body: JSON.stringify(userData)
+    }).catch(() => {});
 
     alert(`🎉 تم إنشاء حسابك بنجاح!\n\n🆔 الرقم الجامعي: ${newId}\n🔑 كلمة السر: ${password}`);
     window.location.href = 'subjects.html';
 }
 
+// تسجيل دخول الطالب
 async function login() {
     const id = document.getElementById('loginId')?.value.trim();
     const pass = document.getElementById('loginPassword')?.value.trim();
@@ -92,22 +91,18 @@ async function login() {
     let savedUserStr = localStorage.getItem(id);
     
     if (!savedUserStr) {
-        const adminOverride = prompt("⚠️ هذا الحساب غير مسجل على هذا الجهاز.\nيرجى مراجعة الإدارة للمساعدة وفتح الحساب:");
-        
+        const adminOverride = prompt("⚠️ هذا الحساب غير مسجل على هذا الجهاز.\nأدخل كود المشرف للفتح:");
         if (adminOverride !== "Emoo") {
-            alert("❌ الكود غير صحيح. لا يمكن فتح الحساب من جهاز مختلف.");
+            alert("❌ الكود غير صحيح.");
             return;
         }
-        
-        alert("🔓 تم تجاوز قيد الجهاز بنجاح!");
-        
         let targetStudent = null;
         try {
             const students = await fetchAllStudentsFromSheet();
             targetStudent = students.find(s => String(s.id).trim() === id);
-        } catch(e) {}
+        } catch (e) {}
 
-        const userObj = targetStudent || { id: id, name: "طالب معتمد", phone: "-", grade: "-", password: pass, attendanceCount: 0 };
+        const userObj = targetStudent || { id: id, name: "طالب معتمد", phone: "-", grade: "-", password: pass };
         localStorage.setItem('currentUser', JSON.stringify(userObj));
         window.location.href = 'subjects.html';
         return;
