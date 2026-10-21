@@ -61,27 +61,7 @@ async function createAccount() {
         return;
     }
 
-    const settings = await fetchAppSettings();
-    if (String(settings.isRegistrationOpen).trim() === 'false') {
-        alert("❌ عذراً، إنشاء الحسابات مغلق حالياً من قِبل الإدارة!");
-        if(statusEl) statusEl.textContent = "🔒 إنشاء الحسابات مغلق حالياً.";
-        return;
-    }
-
     let deviceId = getOrCreateDeviceId();
-    
-    // التحقق من الجهاز المحلي أو المتعدد مع استثناء الباسورد Emoo
-    const existingUser = localStorage.getItem('currentUser');
-    if (existingUser) {
-        const adminOverride = prompt("🔒 هذا الجهاز مسجل عليه حساب مسبقاً.\nللمساعدة وإنشاء حساب جديد، أدخل الرقم السري الخاص بالإدارة (Emoo):");
-        if (adminOverride !== "Emoo") {
-            alert("❌ الرقم السري غير صحيح!");
-            if(statusEl) statusEl.textContent = "";
-            return;
-        }
-        deviceId = 'DEV-MULTI-' + Math.random().toString(36).substring(2);
-    }
-
     const newId = generateStudentID();
     const userData = {
         id: newId,
@@ -95,14 +75,10 @@ async function createAccount() {
     localStorage.setItem(newId, JSON.stringify(userData));
     localStorage.setItem('currentUser', JSON.stringify(userData));
 
-    // إرسال البيانات لصفحة students في الشيت
     try {
         await fetch(`${sheetDBUrl}?sheet=students`, {
             method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
             body: JSON.stringify({ data: [userData] })
         });
     } catch (e) {
@@ -122,18 +98,21 @@ function login() {
         return;
     }
 
-    // محاولة جلب الطالب من التخزين المحلي أو السماح باستخدام كلمة سر الإدارة Emoo للتجاوز إذا كان جهازا جديدا
     let savedUserStr = localStorage.getItem(id);
     
+    // إذا لم يكن مخزناً محلياً على الجهاز، نظهر رسالة المساعدة الفورية وكود Emoo السري
     if (!savedUserStr) {
-        // إذا لم يكن مخزناً محلياً، نفحص الشيت أو نطلب كود المساعدة للمشرف
-        const adminOverride = prompt("⚠️ هذا الحساب غير مسجل على هذا الجهاز.\nإذا كنت مشرفاً وتريد فتحه لمساعدة الطالب، أدخل كود الإدارة (Emoo):");
+        const adminOverride = prompt("⚠️ هذا الحساب غير مسجل على هذا الجهاز.\nللمساعدة وتجاوز قيد الجهاز، أدخل كود المشرف السري (Emoo):");
         if (adminOverride !== "Emoo") {
-            alert("❌ الرقم الجامعي غير مسجل على هذا الجهاز، ولم يتم إدخال كود المشرف الصحيح.");
+            alert("❌ الرقم السري غير صحيح. لا يمكن فتح الحساب من جهاز مختلف.");
             return;
         }
-        // في حال نجاح كود المشرف، نسمح بتسجيل الدخول المؤقت أو نحفظه
         alert("🔓 تم تجاوز قيد الجهاز بواسطة المشرف بنجاح!");
+        
+        // إنشاء بيانات مؤقتة أو السماح بالدخول
+        const tempUser = { id: id, name: "طالب (مساعد بواسطة الإدارة)", phone: "-", grade: "-", password: pass };
+        localStorage.setItem('currentUser', JSON.stringify(tempUser));
+        window.location.href = 'subjects.html';
         return;
     }
 
