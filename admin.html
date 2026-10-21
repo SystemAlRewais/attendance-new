@@ -50,7 +50,7 @@
                 <button type="button" class="btn" onclick="endLectureAndExport()" style="background: var(--accent-red); flex:1;">🛑 إنهاء وأرشفة</button>
             </div>
             <div id="liveAttendanceContainer" style="overflow-x: auto; max-height: 250px;">
-                <p style="color: var(--text-sub);">لا توجد سجلات.</p>
+                <p style="color: var(--text-sub);">جاري التحميل...</p>
             </div>
         </div>
 
@@ -63,7 +63,7 @@
                 <button type="button" class="btn" onclick="clearArchive()" style="background: var(--accent-red); flex:1;">🗑️ حذف الأرشيف</button>
             </div>
             <div id="archiveContainer" style="overflow-x: auto; max-height: 200px;">
-                <p style="color: var(--text-sub);">لا توجد تقارير.</p>
+                <p style="color: var(--text-sub);">جاري التحميل...</p>
             </div>
         </div>
 
@@ -72,7 +72,7 @@
             <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📋 إدارة بيانات الطلاب</h3>
             <button type="button" class="btn btn-secondary" onclick="loadStudentsList()" style="margin-bottom: 10px;">🔄 تحديث قائمة الطلاب</button>
             <div id="studentsTableContainer" style="overflow-x: auto; max-height: 350px;">
-                <p style="color: var(--text-sub);">لا توجد طلاب مسجلة.</p>
+                <p style="color: var(--text-sub);">جاري التحميل...</p>
             </div>
         </div>
 
@@ -102,11 +102,8 @@
                     currentAttendanceState = settings.isAttendanceOpen !== undefined ? String(settings.isAttendanceOpen) : "true";
                     updateAttendanceIndicator();
                 }
-            } catch(e) {
-                console.error("إعدادات افتراضية:", e);
-            }
+            } catch(e) {}
 
-            // تحميل الجداول بشكل آمن ومنفصل حتى لا تتعطل اللوحة لو جدول فارغ
             loadLiveAttendanceLog();
             loadArchiveReports();
             loadStudentsList();
@@ -205,7 +202,6 @@
             statusMsg.textContent = "⏳ جاري التحديث في السحابة...";
 
             try {
-                // بدلاً من DELETE الذي يعطل الشيت لو كان فارغاً، نستخدم POST المباشر لتحديث الصف الأول
                 await fetch(`${sheetDBUrl}?sheet=Setting`, {
                     method: 'POST',
                     headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
@@ -237,7 +233,9 @@
                 });
                 html += `</table>`;
                 container.innerHTML = html;
-            } catch(e) { container.innerHTML = "<p style='color:var(--text-sub);'>لا توجد سجلات حضور حالية.</p>"; }
+            } catch(e) { 
+                container.innerHTML = "<p style='color:var(--text-sub);'>لا توجد سجلات حضور حالية.</p>"; 
+            }
         }
 
         async function deleteAttendanceRow(name) {
@@ -292,7 +290,9 @@
                 });
                 html += `</table>`;
                 container.innerHTML = html;
-            } catch(e) { container.innerHTML = "<p style='color:var(--text-sub);'>الأرشيف فارغ.</p>"; }
+            } catch(e) { 
+                container.innerHTML = "<p style='color:var(--text-sub);'>الأرشيف فارغ.</p>"; 
+            }
         }
 
         async function deleteArchiveItem(name) {
