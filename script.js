@@ -13,7 +13,6 @@ function generateStudentID() {
     return 'AZ' + Math.floor(100000 + Math.random() * 900000);
 }
 
-// دالة جلب الإعدادات بأمان تام بدون تعليق
 async function fetchAppSettings() {
     try {
         const response = await fetch(`${sheetDBUrl}?sheet=Setting`, { cache: "no-store" });
@@ -21,13 +20,10 @@ async function fetchAppSettings() {
         if (Array.isArray(data) && data.length > 0) {
             return data[0];
         }
-        return { isAttendanceOpen: 'true', currentSubject: 'المحاضرة الأولى', selectedSubject: 'نشأة وسائل الاتصال' };
-    } catch (error) {
-        return { isAttendanceOpen: 'true', currentSubject: 'المحاضرة الأولى', selectedSubject: 'نشأة وسائل الاتصال' };
-    }
+    } catch (error) {}
+    return { isAttendanceOpen: 'true', currentSubject: 'المحاضرة الأولى', selectedSubject: 'نشأة وسائل الاتصال' };
 }
 
-// دالة جلب الطلاب بأمان تام بدون تجميد الصفحة
 async function fetchAllStudentsFromSheet() {
     try {
         const response = await fetch(`${sheetDBUrl}?sheet=students`, { cache: "no-store" });
@@ -35,17 +31,15 @@ async function fetchAllStudentsFromSheet() {
         if (Array.isArray(data)) {
             return data;
         }
-        return [];
-    } catch (error) {
-        return [];
-    }
+    } catch (error) {}
+    return [];
 }
 
 async function createAccount() {
     const statusEl = document.getElementById('authStatus');
     if(statusEl) {
         statusEl.style.color = "#38bdf8";
-        statusEl.textContent = "⏳ جاري إنشاء الحساب وإرساله للشيت...";
+        statusEl.textContent = "⏳ جاري إنشاء الحساب...";
     }
 
     const name = document.getElementById('fullname')?.value.trim();
