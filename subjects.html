@@ -3,86 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة المواد والمحاضرات - كلية الإعلام</title>
+    <title>اختر المادة الدراسية</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <div class="admin-badge" style="background: rgba(79, 70, 229, 0.1); color: #818cf8;">🎓 منصة الطلاب الأكاديمية</div>
-        <h2>اختر المادة الدراسية</h2>
-        <p id="userInfo" style="color: var(--text-main); font-weight: 700; margin-bottom: 20px;"></p>
+    <div class="container" style="max-width: 600px; text-align: center;">
+        <div class="admin-badge" style="background: rgba(56, 189, 248, 0.1); color: #38bdf8;">🎓 المواد الدراسية المتاحة</div>
+        <h2>اختر المادة لتسجيل الحضور</h2>
+        <p id="welcomeStudent" style="color: var(--text-sub); margin-bottom: 25px;"></p>
 
-        <div class="input-group">
-            <label>اختر الفرقة الدراسية:</label>
-            <select id="selectGrade" onchange="loadSubjects()">
-                <option value="">-- اختر الفرقة الدراسية --</option>
-                <option value="1">الفرقة الأولى</option>
-                <option value="2">الفرقة الثانية</option>
-                <option value="3">الفرقة الثالثة</option>
-                <option value="4">الفرقة الرابعة</option>
-            </select>
+        <!-- قائمة المواد الدراسية -->
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px;">
+            <button class="btn" onclick="selectSubject('نشأة وسائل الاتصال')" style="background: #4f46e5; padding: 15px; font-size: 16px;">📚 نشأة وسائل الاتصال</button>
+            <button class="btn" onclick="selectSubject('رأي عام')" style="background: #4f46e5; padding: 15px; font-size: 16px;">📚 رأي عام</button>
+            <button class="btn" onclick="selectSubject('صحافة استقصائية')" style="background: #4f46e5; padding: 15px; font-size: 16px;">📚 صحافة استقصائية</button>
+            <button class="btn" onclick="selectSubject('إذاعة وتلفزيون')" style="background: #4f46e5; padding: 15px; font-size: 16px;">📚 إذاعة وتلفزيون</button>
+            <button class="btn" onclick="selectSubject('إعلان وترويج')" style="background: #4f46e5; padding: 15px; font-size: 16px;">📚 إعلان وترويج</button>
         </div>
 
-        <div class="input-group">
-            <label>المادة والمحاضر:</label>
-            <select id="selectSubject">
-                <option value="">-- اختر الفرقة أولاً --</option>
-            </select>
-        </div>
-
-        <button type="button" class="btn" onclick="goToAttendance()">متابعة لتسجيل الحضور بالـ GPS</button>
-        <button type="button" class="btn btn-secondary" onclick="logout()" style="background-color: transparent; border-color: var(--accent-red); color: var(--accent-red);">تسجيل الخروج</button>
+        <button class="btn btn-secondary" onclick="logout()" style="background: var(--accent-red); margin-top: 10px;">🚪 تسجيل الخروج</button>
         
-        <hr style="margin-top: 25px; border: 0.5px solid var(--border-color);">
-        <a href="admin.html" style="display: block; margin-top: 15px; font-size: 13px; color: var(--text-sub); text-decoration: none;">🔐 لوحة تحكم الإدارة</a>
+        <div style="margin-top: 25px;">
+            <a href="admin.html" style="font-size: 13px; color: var(--text-sub); text-decoration: none;">🔐 لوحة تحكم الإدارة</a>
+        </div>
     </div>
 
     <script src="script.js"></script>
     <script>
-        const user = JSON.parse(localStorage.getItem('currentUser'));
-        if(!user) { 
-            window.location.href = 'index.html'; 
-        } else { 
-            document.getElementById('userInfo').textContent = `👤 طالب: ${user.name} | ID: ${user.id}`; 
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = 'index.html';
+        } else {
+            document.getElementById('welcomeStudent').textContent = `أهلاً بك، ${currentUser.name} (ID: ${currentUser.id})`;
         }
 
-        function loadSubjects() {
-            const grade = document.getElementById('selectGrade').value;
-            const subjectSelect = document.getElementById('selectSubject');
-            subjectSelect.innerHTML = '';
-
-            if(!grade) {
-                subjectSelect.innerHTML = '<option value="">-- اختر الفرقة أولاً --</option>';
-                return;
-            }
-
-            if(grade === "1") {
-                subjectSelect.innerHTML += '<option value="نشأة وسائل الاتصال - د. مصطفى مندي">نشأة وسائل الاتصال - د. مصطفى مندي</option>';
-            } else if(grade === "2") {
-                subjectSelect.innerHTML += '<option value="رأي عام وإعلام - دكتور المادة">رأي عام وإعلام - دكتور المادة</option>';
-            } else if(grade === "3") {
-                subjectSelect.innerHTML += '<option value="صحافة استقصائية - دكتور المادة">صحافة استقصائية - دكتور المادة</option>';
-            } else if(grade === "4") {
-                subjectSelect.innerHTML += '<option value="مشروع التخرج - الإدارة">مشروع التخرج - الإدارة</option>';
-            }
-
-            const customSubjects = JSON.parse(localStorage.getItem('customSubjects')) || [];
-            customSubjects.filter(s => s.grade === grade).forEach(s => {
-                subjectSelect.innerHTML += `<option value="${s.title}">${s.title}</option>`;
-            });
-
-            if(subjectSelect.innerHTML === '') {
-                subjectSelect.innerHTML = '<option value="">-- لا توجد مواد متاحة حالياً --</option>';
-            }
-        }
-
-        function goToAttendance() {
-            const subject = document.getElementById('selectSubject').value;
-            if(!subject) {
-                alert('من فضلك اختر الفرقة والمادة أولاً!');
-                return;
-            }
-            localStorage.setItem('selectedSubject', subject);
+        function selectSubject(subjectName) {
+            localStorage.setItem('selectedSubject', subjectName);
             window.location.href = 'attendance.html';
         }
 
