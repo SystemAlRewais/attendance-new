@@ -161,20 +161,18 @@
             statusMsg.textContent = "⏳ جاري تسجيل بيانات الحضور في السحابة...";
 
             try {
-                await fetch(`${sheetDBUrl}?sheet=attendance`, {
+                await fetch(googleScriptUrl, {
                     method: 'POST',
-                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        data: [{
-                            id: user.id,
-                            name: user.name,
-                            phone: user.phone,
-                            grade: user.grade,
-                            subject: subject,
-                            time: timeStr,
-                            locationLink: locationLink,
-                            status: typeStatus
-                        }]
+                        action: "recordAttendance",
+                        id: user.id,
+                        name: user.name,
+                        phone: user.phone,
+                        grade: user.grade,
+                        subject: subject,
+                        time: timeStr,
+                        locationLink: locationLink,
+                        status: typeStatus
                     })
                 });
 
