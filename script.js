@@ -1,5 +1,5 @@
 // تم وضع الرابط الخاص بك هنا
-const googleScriptUrl = "https://script.google.com/macros/s/AKfycbwSojiVhBC1d-liDlhx9ZXfor2L0EHwJ0OPMuezVmwbyhkSJ-ByYxgear27M5ncA7uK/exec";
+const googleScriptUrl = "https://script.google.com/macros/s/AKfycbzBiZIZHYH_oosvkrM4HGcIdJCJWeDE2M7UxfhB4CXb_gENUarExVk68VSR0jwWJkpKYg/exec";
 
 // جلب أو إنشاء معرف الجهاز الفريد
 function getOrCreateDeviceId() {
