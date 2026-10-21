@@ -13,17 +13,19 @@ function generateStudentID() {
     return 'AZ' + Math.floor(100000 + Math.random() * 900000);
 }
 
+// جلب الإعدادات بأمان
 async function fetchAppSettings() {
     try {
         const response = await fetch(`${sheetDBUrl}?sheet=Setting`, { cache: "no-store" });
         const data = await response.json();
         if (Array.isArray(data) && data.length > 0) {
-            return data[0];
+            return data[data.length - 1]; // جلب أحدث صف تم حفظه
         }
     } catch (error) {}
-    return { isAttendanceOpen: 'true', currentSubject: 'المحاضرة الأولى', selectedSubject: 'نشأة وسائل الاتصال' };
+    return { isAttendanceOpen: 'true', currentSubject: 'المحاضرة الأولى', selectedSubject: 'نشأة وسائل الاتصال - د. مصطفى مندي' };
 }
 
+// جلب الطلاب بأمان
 async function fetchAllStudentsFromSheet() {
     try {
         const response = await fetch(`${sheetDBUrl}?sheet=students`, { cache: "no-store" });
@@ -61,6 +63,7 @@ async function createAccount() {
         phone: phone,
         grade: grade,
         password: password,
+        attendanceCount: 0, // عدد مرات الحضور الأولي
         boundDeviceId: deviceId
     };
 
@@ -106,7 +109,7 @@ async function login() {
             targetStudent = students.find(s => String(s.id).trim() === id);
         } catch(e) {}
 
-        const userObj = targetStudent || { id: id, name: "طالب معتمد", phone: "-", grade: "-", password: pass };
+        const userObj = targetStudent || { id: id, name: "طالب معتمد", phone: "-", grade: "-", password: pass, attendanceCount: 0 };
         localStorage.setItem('currentUser', JSON.stringify(userObj));
         window.location.href = 'subjects.html';
         return;
