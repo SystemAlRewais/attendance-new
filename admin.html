@@ -97,8 +97,8 @@
         <button type="button" class="btn btn-secondary" onclick="window.location.href='subjects.html'">العودة للمواد</button>
     </div>
 
-    <script src="script.js"></script>
     <script>
+        const googleScriptUrl = "https://script.google.com/macros/s/AKfycbx5QKXufk2GhnpXKv8zjZ_UHudu6ccAu7lV06118FGAjfQGdCNb_bAHpS2gQn1ccuaQow/exec";
         let currentAttendanceState = "true";
 
         window.onload = async function() {
@@ -125,6 +125,28 @@
             loadArchiveReports();
             loadStudentsList();
         };
+
+        async function fetchAppSettings() {
+            try {
+                const res = await fetch(`${googleScriptUrl}?action=getSettings`);
+                return await res.json();
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function fetchAllStudentsFromSheet() {
+            try {
+                const res = await fetch(`${googleScriptUrl}?action=getStudents`);
+                return await res.json();
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function generateStudentID() {
+            return 'AZ' + Math.floor(100000 + Math.random() * 900000);
+        }
 
         function getSavedSubjects() {
             let subs = JSON.parse(localStorage.getItem('customSubjectsList'));
@@ -339,7 +361,7 @@
                             <td style="font-weight:bold; color:#38bdf8;">${row.lectureName}</td>
                             <td>${row.date || '-'}</td>
                             <td style="color:var(--accent-green); font-weight:bold;">${row.totalStudents || 0}</td>
-                            <td style="font-size:11px; max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${row.details || ''}">${row.details || '-'}</td>
+                            <td style="font-size:11px; white-space:pre-wrap; max-width:300px;" title="${row.details || ''}">${row.details || '-'}</td>
                             <td><button onclick="deleteArchiveItem('${row.lectureName}')" style="background:var(--accent-red); color:#fff; border:none; padding:3px 6px; border-radius:4px;">حذف</button></td>
                         </tr>`;
                     }
@@ -401,10 +423,10 @@
                             <td>${st.name}</td>
                             <td>${st.phone}</td>
                             <td>${st.grade || '-'}</td>
-                            <td style="color:#f59e0b; font-family:monospace;">${st.password || '-'}</td>
+                            <td style="color:#f59e0b; font-weight:bold; font-family:monospace;">${st.password || '-'}</td>
                             <td style="color:var(--accent-green); font-weight:bold;">${st.attendanceCount || 0} مرة</td>
                             <td>
-                                <button onclick="editStudentData('${st.id}', '${st.name}', '${st.phone}', '${st.password || ''}', '${st.attendanceCount || 0}')" style="background:#38bdf8; color:#fff; border:none; padding:3px 6px; border-radius:4px; margin-left:2px;">✏️</button>
+                                <button onclick="editStudentData('${st.id}', '${st.name}', '${st.phone}', '${st.grade || 'الفرقة الأولى'}', '${st.password || ''}', '${st.attendanceCount || 0}')" style="background:#38bdf8; color:#fff; border:none; padding:3px 6px; border-radius:4px; margin-left:2px;">✏️</button>
                                 <button onclick="deleteStudentRow('${st.id}')" style="background:var(--accent-red); color:#fff; border:none; padding:3px 6px; border-radius:4px;">🗑️</button>
                             </td>
                         </tr>`;
@@ -417,11 +439,13 @@
             }
         }
 
-        async function editStudentData(id, currentName, currentPhone, currentPass, currentAttendance) {
+        async function editStudentData(id, currentName, currentPhone, currentGrade, currentPass, currentAttendance) {
             const newName = prompt("✏️ تعديل اسم الطالب:", currentName);
             if(newName === null) return;
             const newPhone = prompt("📞 تعديل رقم الهاتف:", currentPhone);
             if(newPhone === null) return;
+            const newGrade = prompt("🎓 تعديل الفرقة (مثال: الفرقة الأولى):", currentGrade);
+            if(newGrade === null) return;
             const newPass = prompt("🔑 تعديل كلمة السر:", currentPass);
             if(newPass === null) return;
             const newAttendance = prompt("📊 تعديل عدد مرات الحضور:", currentAttendance);
@@ -435,11 +459,12 @@
                         id: id,
                         name: newName,
                         phone: newPhone,
+                        grade: newGrade,
                         password: newPass,
                         attendanceCount: newAttendance
                     })
                 });
-                alert("✅ تم تعديل بيانات الطالب بنجاح!");
+                alert("✅ تم تعديل كافة بيانات الطالب بنجاح!");
                 loadStudentsList();
             } catch(e) { alert("حدث خطأ أثناء التعديل."); }
         }
