@@ -98,7 +98,7 @@
     </div>
 
     <script>
-        const googleScriptUrl = "https://script.google.com/macros/s/AKfycbx5QKXufk2GhnpXKv8zjZ_UHudu6ccAu7lV06118FGAjfQGdCNb_bAHpS2gQn1ccuaQow/exec";
+        const googleScriptUrl = "https://script.google.com/macros/s/AKfycbx6xCqLfalg9UfQEfO3tRyASi0pUxcMPeeNmwt6zcvZAV3Zm3PxLkcgScEghVnqdKucXQ/exec";
         let currentAttendanceState = "true";
 
         window.onload = async function() {
@@ -464,15 +464,21 @@
                         attendanceCount: newAttendance
                     })
                 });
+                localStorage.removeItem(id);
                 alert("✅ تم تعديل كافة بيانات الطالب بنجاح!");
                 loadStudentsList();
             } catch(e) { alert("حدث خطأ أثناء التعديل."); }
         }
 
         async function deleteStudentRow(id) {
-            if(confirm(`حذف الطالب ذو الـ ID (${id}) نهائياً؟`)) {
-                await fetch(googleScriptUrl, { method: 'POST', body: JSON.stringify({ action: "deleteStudent", id: id }) }).catch(()=>{});
-                loadStudentsList();
+            if(confirm(`حذف الطالب ذو الـ ID (${id}) نهائياً وتفريغ حسابه؟`)) {
+                try {
+                    await fetch(googleScriptUrl, { method: 'POST', body: JSON.stringify({ action: "deleteStudent", id: id }) });
+                    localStorage.removeItem(id);
+                    localStorage.removeItem('currentUser');
+                    alert("🗑️ تم حذف حساب الطالب نهائياً ولن يتمكن من الدخول مجدداً!");
+                    loadStudentsList();
+                } catch(e) { alert("حدث خطأ أثناء الحذف."); }
             }
         }
     </script>
