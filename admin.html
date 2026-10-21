@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container" style="max-width: 800px;">
+    <div class="container" style="max-width: 900px;">
         <div class="admin-badge" style="background: rgba(239, 68, 68, 0.1); color: var(--accent-red);">🔐 لوحة الإدارة العليا</div>
         <h2>لوحة التحكم والتحكم السحابي للمواد</h2>
 
@@ -17,7 +17,7 @@
             
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                 <input type="text" id="newSubjectInput" placeholder="أدخل اسم مادة جديدة..." style="flex: 2; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: #fff; border-radius: 8px;">
-                <button type="button" class="btn" onclick="addNewSubject()" style="flex: 1; background: #10b981;">➕ إضافة</button>
+                <button type="button" class="btn" onclick="addNewSubject()" style="flex: 1; background: #10b981;">➕ إضافة مادة</button>
             </div>
 
             <div class="input-group">
@@ -27,14 +27,14 @@
             </div>
 
             <div class="input-group">
-                <label>عنوان المحاضرة:</label>
+                <label>عنوان المحاضرة الحالية:</label>
                 <input type="text" id="adminCurrentSubject" placeholder="مثال: المحاضرة الأولى">
             </div>
             
-            <button type="button" class="btn" onclick="saveSubjectAndSettings()" style="background: #4f46e5; margin-bottom: 15px;">💾 حفظ وتحديث اسم المحاضرة</button>
+            <button type="button" class="btn" onclick="saveSubjectAndSettings()" style="background: #4f46e5; margin-bottom: 15px;">💾 حفظ وتحديث الإعدادات بالسحابة</button>
 
             <div style="margin-bottom: 15px;">
-                <label style="display:block; margin-bottom:5px; font-size:14px; color:var(--text-sub);">التحكم في فتح/إغلاق تسجيل الحضور للمادة:</label>
+                <label style="display:block; margin-bottom:5px; font-size:14px; color:var(--text-sub);">التحكم في فتح/إغلاق تسجيل الحضور للطالب:</label>
                 <div style="display: flex; gap: 10px;">
                     <button type="button" id="btnToggleAttendance" class="btn" onclick="toggleAttendanceState()" style="flex:1;">🟢 فتح / إغلاق الحضور</button>
                 </div>
@@ -42,34 +42,34 @@
             </div>
         </div>
 
-        <!-- سجل الحضور الحي -->
+        <!-- سجل الحضور الحي (شامل لكل تفاصيل الطالب) -->
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
-            <h3 style="font-size: 16px; margin-bottom: 10px; color: #10b981;">📊 سجل الحضور الحي</h3>
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #10b981;">📊 سجل الحضور الحي (شامل كل التفاصيل)</h3>
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                <button type="button" class="btn btn-secondary" onclick="loadLiveAttendanceLog()" style="flex:1;">🔄 تحديث</button>
-                <button type="button" class="btn" onclick="endLectureAndExport()" style="background: var(--accent-red); flex:1;">🛑 إنهاء وأرشفة</button>
+                <button type="button" class="btn btn-secondary" onclick="loadLiveAttendanceLog()" style="flex:1;">🔄 تحديث السجل</button>
+                <button type="button" class="btn" onclick="endLectureAndExport()" style="background: var(--accent-red); flex:1;">🛑 إنهاء المحاضرة وأرشفة التقرير</button>
             </div>
-            <div id="liveAttendanceContainer" style="overflow-x: auto; max-height: 250px;">
+            <div id="liveAttendanceContainer" style="overflow-x: auto; max-height: 280px;">
                 <p style="color: var(--text-sub);">جاري التحميل...</p>
             </div>
         </div>
 
-        <!-- الأرشيف -->
+        <!-- الأرشيف (تنزيل وحذف) -->
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
-            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📁 أرشيف التقارير</h3>
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📁 أرشيف التقارير السابقة</h3>
             <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
-                <button type="button" class="btn btn-secondary" onclick="loadArchiveReports()" style="flex:1;">🔄 تحديث</button>
-                <button type="button" class="btn" onclick="downloadArchive()" style="background: #10b981; flex:1;">📥 تحميل</button>
-                <button type="button" class="btn" onclick="clearArchive()" style="background: var(--accent-red); flex:1;">🗑️ حذف الأرشيف</button>
+                <button type="button" class="btn btn-secondary" onclick="loadArchiveReports()" style="flex:1;">🔄 تحديث الأرشيف</button>
+                <button type="button" class="btn" onclick="downloadArchive()" style="background: #10b981; flex:1;">📥 تحميل الأرشيف (CSV)</button>
+                <button type="button" class="btn" onclick="clearArchive()" style="background: var(--accent-red); flex:1;">🗑️ مسح الأرشيف بالكامل</button>
             </div>
             <div id="archiveContainer" style="overflow-x: auto; max-height: 200px;">
                 <p style="color: var(--text-sub);">جاري التحميل...</p>
             </div>
         </div>
 
-        <!-- إدارة الطلاب -->
+        <!-- إدارة بيانات الطلاب (تحكم وتعديل كامل) -->
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
-            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📋 إدارة بيانات الطلاب</h3>
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📋 إدارة بيانات الطلاب (تحكم كامل وتعديل الحضور)</h3>
             <button type="button" class="btn btn-secondary" onclick="loadStudentsList()" style="margin-bottom: 10px;">🔄 تحديث قائمة الطلاب</button>
             <div id="studentsTableContainer" style="overflow-x: auto; max-height: 350px;">
                 <p style="color: var(--text-sub);">جاري التحميل...</p>
@@ -112,7 +112,7 @@
         function getSavedSubjects() {
             let subs = JSON.parse(localStorage.getItem('customSubjectsList'));
             if (!subs || !Array.isArray(subs) || subs.length === 0) {
-                subs = ["نشأة وسائل الاتصال", "رأي عام", "صحافة استقصائية", "إذاعة وتلفزيون", "إعلان وترويج"];
+                subs = ["نشأة وسائل الاتصال - د. مصطفى مندي"];
                 localStorage.setItem('customSubjectsList', JSON.stringify(subs));
             }
             return subs;
@@ -141,7 +141,7 @@
             input.value = "";
             loadSubjectsIntoAdminDropdown();
             document.getElementById('adminSubjectSelect').value = val;
-            alert("✔️ تمت الإضافة بنجاح!");
+            alert("✔️ تمت إضافة المادة بنجاح!");
         }
 
         function deleteSelectedSubject() {
@@ -153,7 +153,7 @@
                 subs = subs.filter(s => s !== val);
                 localStorage.setItem('customSubjectsList', JSON.stringify(subs));
                 loadSubjectsIntoAdminDropdown();
-                alert("🗑️ تم الحذف!");
+                alert("🗑️ تم حذف المادة بنجاح!");
             }
         }
 
@@ -175,7 +175,7 @@
 
         async function saveSubjectAndSettings() {
             const subjectName = document.getElementById('adminSubjectSelect').value;
-            const lectureTitle = document.getElementById('adminCurrentSubject').value.trim() || "محاضرة عامة";
+            const lectureTitle = document.getElementById('adminCurrentSubject').value.trim() || "المحاضرة الأولى";
             await updateCloudSettings({
                 selectedSubject: subjectName,
                 currentSubject: lectureTitle,
@@ -186,7 +186,7 @@
         async function toggleAttendanceState() {
             currentAttendanceState = (String(currentAttendanceState).trim() === "true") ? "false" : "true";
             const subjectName = document.getElementById('adminSubjectSelect').value;
-            const lectureTitle = document.getElementById('adminCurrentSubject').value.trim() || "محاضرة عامة";
+            const lectureTitle = document.getElementById('adminCurrentSubject').value.trim() || "المحاضرة الأولى";
             
             await updateCloudSettings({
                 selectedSubject: subjectName,
@@ -208,95 +208,113 @@
                     body: JSON.stringify({ data: [settingsObj] })
                 });
                 statusMsg.style.color = "var(--accent-green)";
-                statusMsg.textContent = "✅ تم التحديث بنجاح!";
-                alert("✔️ تم الحفظ والتحديث في السحابة!");
+                statusMsg.textContent = "✅ تم حفظ التحديث في الشيت بنجاح!";
+                alert("✔️ تم الحفظ والتحديث بنجاح!");
             } catch (e) {
                 statusMsg.style.color = "var(--accent-red)";
-                statusMsg.textContent = "❌ خطأ في الاتصال.";
+                statusMsg.textContent = "❌ خطأ في الاتصال بالسحابة.";
             }
         }
 
         async function loadLiveAttendanceLog() {
             const container = document.getElementById('liveAttendanceContainer');
+            container.innerHTML = "جاري التحميل...";
             try {
                 const res = await fetch(`${sheetDBUrl}?sheet=attendance`, { cache: "no-store" });
                 const data = await res.json();
                 if(!Array.isArray(data) || data.length === 0) {
-                    container.innerHTML = "<p style='color:var(--text-sub);'>لا توجد سجلات حضور.</p>";
+                    container.innerHTML = "<p style='color:var(--text-sub);'>لا توجد سجلات حضور حي حالياً.</p>";
                     return;
                 }
-                let html = `<table style="width:100%; border-collapse:collapse; font-size:13px;"><tr style="background:rgba(255,255,255,0.05);"><th>الاسم</th><th>المادة</th><th>الوقت</th><th>إجراء</th></tr>`;
+                let html = `<table style="width:100%; border-collapse:collapse; font-size:12px;"><tr style="background:rgba(255,255,255,0.05); text-align:right;"><th>ID</th><th>الاسم</th><th>الهاتف</th><th>المادة</th><th>الوقت</th><th>الموقع</th><th>إجراء</th></tr>`;
                 data.forEach(row => {
                     if(row.name) {
-                        html += `<tr style="border-bottom:1px solid var(--border-color);"><td>${row.name}</td><td>${row.subject || '-'}</td><td>${row.time || '-'}</td><td><button onclick="deleteAttendanceRow('${row.name}')" style="background:var(--accent-red); color:#fff; border:none; padding:3px 6px; border-radius:4px;">حذف</button></td></tr>`;
+                        html += `<tr style="border-bottom:1px solid var(--border-color);">
+                            <td>${row.id || '-'}</td>
+                            <td style="font-weight:bold; color:#38bdf8;">${row.name}</td>
+                            <td>${row.phone || '-'}</td>
+                            <td>${row.subject || '-'}</td>
+                            <td>${row.time || '-'}</td>
+                            <td><a href="${row.locationLink || '#'}" target="_blank" style="color:#10b981; text-decoration:underline;">📍 خريطة</a></td>
+                            <td><button onclick="deleteAttendanceRow('${row.name}')" style="background:var(--accent-red); color:#fff; border:none; padding:3px 6px; border-radius:4px;">حذف</button></td>
+                        </tr>`;
                     }
                 });
                 html += `</table>`;
                 container.innerHTML = html;
             } catch(e) { 
-                container.innerHTML = "<p style='color:var(--text-sub);'>لا توجد سجلات حضور حالية.</p>"; 
+                container.innerHTML = "<p style='color:var(--text-sub);'>لا توجد سجلات حضور حي.</p>"; 
             }
         }
 
         async function deleteAttendanceRow(name) {
-            if(confirm(`حذف ${name}؟`)) {
+            if(confirm(`حذف الطالب ${name} من كشف الحضور؟`)) {
                 await fetch(`${sheetDBUrl}/name/${encodeURIComponent(name)}?sheet=attendance`, { method: 'DELETE' }).catch(()=>{});
                 loadLiveAttendanceLog();
             }
         }
 
         async function endLectureAndExport() {
-            if(confirm("🛑 إنهاء المحاضرة وأرشفة الحضور؟")) {
+            if(confirm("🛑 إنهاء المحاضرة وأرشفة كافة تفاصيل الحضور؟")) {
                 try {
                     const res = await fetch(`${sheetDBUrl}?sheet=attendance`, { cache: "no-store" });
                     const list = await res.json();
                     if(Array.isArray(list) && list.length > 0) {
                         const entry = {
-                            lectureName: `${document.getElementById('adminSubjectSelect').value} - ${document.getElementById('adminCurrentSubject').value || 'محاضرة'}`,
+                            lectureName: `${document.getElementById('adminSubjectSelect').value} - ${document.getElementById('adminCurrentSubject').value || 'المحاضرة الأولى'}`,
                             date: new Date().toLocaleString('ar-EG'),
                             totalStudents: list.length,
-                            details: JSON.stringify(list.map(a => a.name))
+                            details: JSON.stringify(list.map(a => `${a.name} (${a.id})`))
                         };
+                        
                         await fetch(`${sheetDBUrl}?sheet=Archive`, {
                             method: 'POST',
                             headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
                             body: JSON.stringify({ data: [entry] })
                         }).catch(()=>{});
+
                         for(let row of list) {
                             if(row.name) await fetch(`${sheetDBUrl}/name/${encodeURIComponent(row.name)}?sheet=attendance`, { method: 'DELETE' }).catch(()=>{});
                         }
                     }
-                    alert("📊 تمت الأرشفة بنجاح!");
+                    alert("📊 تم إنهاء المحاضرة وأرشفة التقرير بكافة التفاصيل بنجاح!");
                     loadLiveAttendanceLog();
                     loadArchiveReports();
-                } catch(e) { alert("خطأ في الأرشفة."); }
+                } catch(e) { alert("حدث خطأ أثناء الأرشفة."); }
             }
         }
 
         async function loadArchiveReports() {
             const container = document.getElementById('archiveContainer');
+            container.innerHTML = "جاري التحميل...";
             try {
                 const res = await fetch(`${sheetDBUrl}?sheet=Archive`, { cache: "no-store" });
                 const data = await res.json();
                 if(!Array.isArray(data) || data.length === 0) {
-                    container.innerHTML = "<p style='color:var(--text-sub);'>الأرشيف فارغ.</p>";
+                    container.innerHTML = "<p style='color:var(--text-sub);'>الأرشيف فارغ حالياً.</p>";
                     return;
                 }
-                let html = `<table style="width:100%; border-collapse:collapse; font-size:13px;"><tr style="background:rgba(255,255,255,0.05);"><th>المحاضرة</th><th>التاريخ</th><th>العدد</th><th>إجراء</th></tr>`;
+                let html = `<table style="width:100%; border-collapse:collapse; font-size:12px;"><tr style="background:rgba(255,255,255,0.05); text-align:right;"><th>المحاضرة</th><th>التاريخ</th><th>العدد</th><th>التفاصيل</th><th>حذف</th></tr>`;
                 data.forEach(row => {
                     if(row.lectureName) {
-                        html += `<tr style="border-bottom:1px solid var(--border-color);"><td>${row.lectureName}</td><td>${row.date || '-'}</td><td>${row.totalStudents || 0}</td><td><button onclick="deleteArchiveItem('${row.lectureName}')" style="background:var(--accent-red); color:#fff; border:none; padding:3px 6px; border-radius:4px;">حذف</button></td></tr>`;
+                        html += `<tr style="border-bottom:1px solid var(--border-color);">
+                            <td style="font-weight:bold; color:#38bdf8;">${row.lectureName}</td>
+                            <td>${row.date || '-'}</td>
+                            <td style="color:var(--accent-green);">${row.totalStudents || 0}</td>
+                            <td style="font-size:11px;">${row.details || '-'}</td>
+                            <td><button onclick="deleteArchiveItem('${row.lectureName}')" style="background:var(--accent-red); color:#fff; border:none; padding:3px 6px; border-radius:4px;">حذف</button></td>
+                        </tr>`;
                     }
                 });
                 html += `</table>`;
                 container.innerHTML = html;
             } catch(e) { 
-                container.innerHTML = "<p style='color:var(--text-sub);'>الأرشيف فارغ.</p>"; 
+                container.innerHTML = "<p style='color:var(--text-sub);'>الأرشيف فارغ حالياً.</p>"; 
             }
         }
 
         async function deleteArchiveItem(name) {
-            if(confirm(`حذف تقرير "${name}"؟`)) {
+            if(confirm(`حذف التقرير المؤرشف لـ "${name}"؟`)) {
                 await fetch(`${sheetDBUrl}/lectureName/${encodeURIComponent(name)}?sheet=Archive`, { method: 'DELETE' }).catch(()=>{});
                 loadArchiveReports();
             }
@@ -306,19 +324,20 @@
             try {
                 const res = await fetch(`${sheetDBUrl}?sheet=Archive`, { cache: "no-store" });
                 const data = await res.json();
-                if(!Array.isArray(data) || data.length === 0) { alert("لا توجد بيانات."); return; }
+                if(!Array.isArray(data) || data.length === 0) { alert("لا توجد تقارير مؤرشفة لتحميلها."); return; }
                 let csv = "LectureName,Date,TotalStudents,Details\n";
                 data.forEach(r => csv += `"${r.lectureName || ''}","${r.date || ''}","${r.totalStudents || 0}","${(r.details || '').replace(/"/g, '""')}"\n`);
                 const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = 'Archive.csv';
+                a.href = url;
+                a.download = 'Archive_Reports.csv';
                 a.click();
-            } catch(e) { alert("خطأ التحميل."); }
+            } catch(e) { alert("حدث خطأ أثناء تحميل الأرشيف."); }
         }
 
         async function clearArchive() {
-            if(confirm("⚠️ مسح الأرشيف بالكامل؟")) {
+            if(confirm("⚠️ مسح الأرشيف بالكامل نهائياً؟")) {
                 try {
                     const res = await fetch(`${sheetDBUrl}?sheet=Archive`, { cache: "no-store" });
                     const data = await res.json();
@@ -327,7 +346,7 @@
                             if(r.lectureName) await fetch(`${sheetDBUrl}/lectureName/${encodeURIComponent(r.lectureName)}?sheet=Archive`, { method: 'DELETE' }).catch(()=>{});
                         }
                     }
-                    alert("🗑️ تم مسح الأرشيف!");
+                    alert("🗑️ تم تفريغ الأرشيف بالكامل!");
                     loadArchiveReports();
                 } catch(e) {}
             }
@@ -335,27 +354,67 @@
 
         async function loadStudentsList() {
             const container = document.getElementById('studentsTableContainer');
+            container.innerHTML = "جاري التحميل...";
             try {
                 const students = await fetchAllStudentsFromSheet();
                 if(!students || students.length === 0) {
-                    container.innerHTML = "<p style='color:var(--text-sub);'>لا توجد طلاب مسجلة.</p>";
+                    container.innerHTML = "<p style='color:var(--text-sub);'>لا توجد بيانات طلاب مسجلة.</p>";
                     return;
                 }
-                let html = `<table style="width:100%; border-collapse:collapse; font-size:13px;"><tr style="background:rgba(255,255,255,0.05);"><th>ID</th><th>الاسم</th><th>الهاتف</th><th>السر</th><th>تحكم</th></tr>`;
+                let html = `<table style="width:100%; border-collapse:collapse; font-size:12px;"><tr style="background:rgba(255,255,255,0.05); text-align:right;"><th>ID</th><th>الاسم</th><th>الهاتف</th><th>السر</th><th>الحضور</th><th>تعديل/حذف</th></tr>`;
                 students.forEach(st => {
                     if(st.id) {
-                        html += `<tr style="border-bottom:1px solid var(--border-color);"><td>${st.id}</td><td>${st.name}</td><td>${st.phone}</td><td>${st.password || '-'}</td><td><button onclick="deleteStudentRow('${st.id}')" style="background:var(--accent-red); color:#fff; border:none; padding:3px 6px; border-radius:4px;">حذف</button></td></tr>`;
+                        html += `<tr style="border-bottom:1px solid var(--border-color);">
+                            <td>${st.id}</td>
+                            <td>${st.name}</td>
+                            <td>${st.phone}</td>
+                            <td>${st.password || '-'}</td>
+                            <td style="color:var(--accent-green); font-weight:bold;">${st.attendanceCount || 0} مرة</td>
+                            <td>
+                                <button onclick="editStudentData('${st.id}', '${st.name}', '${st.phone}', '${st.password || ''}', '${st.attendanceCount || 0}')" style="background:#38bdf8; color:#fff; border:none; padding:3px 6px; border-radius:4px; margin-left:2px;">✏️</button>
+                                <button onclick="deleteStudentRow('${st.id}')" style="background:var(--accent-red); color:#fff; border:none; padding:3px 6px; border-radius:4px;">🗑️</button>
+                            </td>
+                        </tr>`;
                     }
                 });
                 html += `</table>`;
                 container.innerHTML = html;
             } catch(e) {
-                container.innerHTML = "<p style='color:var(--text-sub);'>لا توجد طلاب مسجلة.</p>";
+                container.innerHTML = "<p style='color:var(--text-sub);'>لا توجد بيانات طلاب مسجلة.</p>";
             }
         }
 
+        async function editStudentData(id, currentName, currentPhone, currentPass, currentAttendance) {
+            const newName = prompt("✏️ تعديل اسم الطالب:", currentName);
+            if(newName === null) return;
+            const newPhone = prompt("📞 تعديل رقم الهاتف:", currentPhone);
+            if(newPhone === null) return;
+            const newPass = prompt("🔑 تعديل كلمة السر:", currentPass);
+            if(newPass === null) return;
+            const newAttendance = prompt("📊 تعديل عدد مرات الحضور:", currentAttendance);
+            if(newAttendance === null) return;
+
+            const updatedData = {
+                id: id,
+                name: newName,
+                phone: newPhone,
+                password: newPass,
+                attendanceCount: newAttendance
+            };
+
+            try {
+                await fetch(`${sheetDBUrl}/id/${id}?sheet=students`, {
+                    method: 'PATCH',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: updatedData })
+                });
+                alert("✅ تم تعديل بيانات الطالب بنجاح!");
+                loadStudentsList();
+            } catch(e) { alert("حدث خطأ أثناء تعديل بيانات الطالب."); }
+        }
+
         async function deleteStudentRow(id) {
-            if(confirm(`حذف الطالب ${id}؟`)) {
+            if(confirm(`حذف الطالب ذو الـ ID (${id}) نهائياً؟`)) {
                 await fetch(`${sheetDBUrl}/id/${id}?sheet=students`, { method: 'DELETE' }).catch(()=>{});
                 loadStudentsList();
             }
