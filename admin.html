@@ -11,32 +11,35 @@
         <div class="admin-badge" style="background: rgba(239, 68, 68, 0.1); color: var(--accent-red);">🔐 لوحة الإدارة العليا</div>
         <h2>لوحة التحكم والتحكم السحابي للمواد</h2>
 
-        <!-- إعدادات المادة وحالة الحضور -->
+        <!-- إعدادات المواد وحالة الحضور -->
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
-            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📚 اختيار المادة والمحاضرة</h3>
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📚 إدارة المواد الدراسية والمحاضرات</h3>
             
-            <div class="input-group">
-                <label>اختر المادة:</label>
-                <select id="adminSubjectSelect" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: #fff; border-radius: 8px; margin-bottom: 10px;">
-                    <option value="نشأة وسائل الاتصال">نشأة وسائل الاتصال</option>
-                    <option value="رأي عام">رأي عام</option>
-                    <option value="صحافة استقصائية">صحافة استقصائية</option>
-                    <option value="إذاعة وتلفزيون">إذاعة وتلفزيون</option>
-                    <option value="إعلان وتبرع">إعلان وترويج</option>
-                </select>
+            <!-- إضافة مادة جديدة -->
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <input type="text" id="newSubjectInput" placeholder="أدخل اسم مادة جديدة للإضافة..." style="flex: 2; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: #fff; border-radius: 8px;">
+                <button type="button" class="btn" onclick="addNewSubject()" style="flex: 1; background: #10b981;">➕ إضافة المادة</button>
             </div>
 
             <div class="input-group">
-                <label>عنوان المحاضرة:</label>
+                <label>اختر المادة الحالية:</label>
+                <select id="adminSubjectSelect" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: #fff; border-radius: 8px; margin-bottom: 10px;">
+                    <!-- يتم تعبئتها ديناميكياً -->
+                </select>
+                <button type="button" class="btn" onclick="deleteSelectedSubject()" style="background: var(--accent-red); padding: 5px 10px; font-size: 12px; margin-bottom: 15px;">🗑️ حذف المادة المحددة</button>
+            </div>
+
+            <div class="input-group">
+                <label>عنوان المحاضرة الحالية:</label>
                 <input type="text" id="adminCurrentSubject" placeholder="مثال: المحاضرة الأولى">
             </div>
             
-            <button type="button" class="btn" onclick="saveSubjectAndSettings()" style="background: #4f46e5; margin-bottom: 15px;">💾 حفظ إعدادات المادة والمحاضرة</button>
+            <button type="button" class="btn" onclick="saveSubjectAndSettings()" style="background: #4f46e5; margin-bottom: 15px;">💾 حفظ إعدادات الجلسة</button>
 
             <div style="margin-bottom: 15px;">
-                <label style="display:block; margin-bottom:5px; font-size:14px; color:var(--text-sub);">التحكم في تسجيل الحضور للمادة المختارة:</label>
+                <label style="display:block; margin-bottom:5px; font-size:14px; color:var(--text-sub);">التحكم السحابي المباشر في تسجيل الحضور:</label>
                 <div style="display: flex; gap: 10px;">
-                    <button type="button" id="btnToggleAttendance" class="btn" onclick="toggleAttendanceState()" style="flex:1; background: #10b981;">🟢 فتح / إغلاق الحضور</button>
+                    <button type="button" id="btnToggleAttendance" class="btn" onclick="toggleAttendanceState()" style="flex:1;">🟢 فتح / إغلاق الحضور</button>
                 </div>
                 <p id="attendanceStatusIndicator" style="margin-top: 8px; font-weight: bold; font-size: 13px;"></p>
             </div>
@@ -92,6 +95,8 @@
                 return;
             }
 
+            await loadSubjectsIntoAdminDropdown();
+
             try {
                 const settings = await fetchAppSettings();
                 if(settings) {
@@ -108,12 +113,70 @@
             }
         };
 
+        // إدارة المواد في localStorage لتتمكن من إضافتها وحذفها
+        function getSavedSubjects() {
+            let subs = JSON.parse(localStorage.getItem('customSubjectsList'));
+            if (!subs || subs.length === 0) {
+                subs = ["نشأة وسائل الاتصال", "رأي عام", "صحافة استقصائية", "إذاعة وتلفزيون", "إعلان وترويج"];
+                localStorage.setItem('customSubjectsList', JSON.stringify(subs));
+            }
+            return subs;
+        }
+
+        async function loadSubjectsIntoAdminDropdown() {
+            const select = document.getElementById('adminSubjectSelect');
+            const subs = getSavedSubjects();
+            select.innerHTML = "";
+            subs.forEach(sub => {
+                const opt = document.createElement('option');
+                opt.value = sub;
+                opt.textContent = sub;
+                select.appendChild(opt);
+            });
+        }
+
+        async function addNewSubject() {
+            const input = document.getElementById('newSubjectInput');
+            const val = input.value.trim();
+            if(!val) {
+                alert("يرجى كتابة اسم المادة أولاً!");
+                return;
+            }
+            let subs = getSavedSubjects();
+            if(subs.includes(val)) {
+                alert("هذه المادة موجودة بالفعل!");
+                return;
+            }
+            subs.push(val);
+            localStorage.setItem('customSubjectsList', JSON.stringify(subs));
+            input.value = "";
+            await loadSubjectsIntoAdminDropdown();
+            document.getElementById('adminSubjectSelect').value = val;
+            alert("✔️ تمت إضافة المادة بنجاح!");
+        }
+
+        async function deleteSelectedSubject() {
+            const select = document.getElementById('adminSubjectSelect');
+            const val = select.value;
+            let subs = getSavedSubjects();
+            if(subs.length <= 1) {
+                alert("يجب أن تبقى مادة واحدة على الأقل!");
+                return;
+            }
+            if(confirm(`هل أنت متأكد من حذف المادة "${val}"؟`)) {
+                subs = subs.filter(s => s !== val);
+                localStorage.setItem('customSubjectsList', JSON.stringify(subs));
+                await loadSubjectsIntoAdminDropdown();
+                alert("🗑️ تم حذف المادة بنجاح!");
+            }
+        }
+
         function updateAttendanceIndicator() {
             const indicator = document.getElementById('attendanceStatusIndicator');
             const btn = document.getElementById('btnToggleAttendance');
-            if(currentAttendanceState === "true") {
+            if(String(currentAttendanceState).trim() === "true") {
                 indicator.style.color = "var(--accent-green)";
-                indicator.textContent = "🟢 الحالة الحالية: تسجيل الحضور متاح ومفتوح للطلاب.";
+                indicator.textContent = "🟢 الحالة الحالية: تسجيل الحضور مفتوح للطلاب.";
                 btn.textContent = "🔴 إغلاق تسجيل الحضور";
                 btn.style.background = "var(--accent-red)";
             } else {
@@ -134,19 +197,19 @@
             await updateCloudSettings({
                 selectedSubject: subjectName,
                 currentSubject: lectureTitle,
-                isAttendanceOpen: currentAttendanceState
+                isAttendanceOpen: String(currentAttendanceState)
             });
         }
 
         async function toggleAttendanceState() {
-            currentAttendanceState = (currentAttendanceState === "true") ? "false" : "true";
+            currentAttendanceState = (String(currentAttendanceState).trim() === "true") ? "false" : "true";
             const subjectName = document.getElementById('adminSubjectSelect').value;
             const lectureTitle = document.getElementById('adminCurrentSubject').value.trim() || "محاضرة عامة";
             
             await updateCloudSettings({
                 selectedSubject: subjectName,
                 currentSubject: lectureTitle,
-                isAttendanceOpen: currentAttendanceState
+                isAttendanceOpen: String(currentAttendanceState)
             });
             updateAttendanceIndicator();
         }
@@ -154,7 +217,7 @@
         async function updateCloudSettings(settingsObj) {
             const statusMsg = document.getElementById('adminStatusMsg');
             statusMsg.style.color = "#38bdf8";
-            statusMsg.textContent = "⏳ جاري حفظ وتحديث الإعدادات سحابياً...";
+            statusMsg.textContent = "⏳ جاري حفظ وحفظ الحالة سحابياً...";
 
             try {
                 await fetch(`${sheetDBUrl}?sheet=Setting`, { method: 'DELETE', body: JSON.stringify({ query: { id: "*" } }) }).catch(()=>{});
@@ -166,12 +229,12 @@
                 });
 
                 statusMsg.style.color = "var(--accent-green)";
-                statusMsg.textContent = "✅ تم تحديث وحفظ الإعدادات بنجاح!";
-                alert("✔️ تم تحديث الحالة والمادة بنجاح في السحابة!");
+                statusMsg.textContent = "✅ تم تحديث الحالة في الشيت بنجاح!";
+                alert("✔️ تم حفظ الحالة (فتح/إغلاق) والمادة في السحابة بنجاح تام!");
             } catch (e) {
                 console.error(e);
                 statusMsg.style.color = "var(--accent-red)";
-                statusMsg.textContent = "❌ حدث خطأ أثناء الاتصال.";
+                statusMsg.textContent = "❌ حدث خطأ أثناء الاتصال بالشيت.";
             }
         }
 
