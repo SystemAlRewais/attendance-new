@@ -21,7 +21,7 @@
             </div>
 
             <div class="input-group">
-                <label>اختر المادة الحالية:</label>
+                <label>المادة الحالية المفعلة:</label>
                 <select id="adminSubjectSelect" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: #fff; border-radius: 8px; margin-bottom: 8px;"></select>
                 <button type="button" class="btn" onclick="deleteSelectedSubject()" style="background: var(--accent-red); padding: 5px 10px; font-size: 12px; margin-bottom: 15px;">🗑️ حذف المادة المحددة</button>
             </div>
@@ -42,7 +42,7 @@
             </div>
         </div>
 
-        <!-- سجل الحضور الحي (شامل لكل تفاصيل الطالب) -->
+        <!-- سجل الحضور الحي -->
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
             <h3 style="font-size: 16px; margin-bottom: 10px; color: #10b981;">📊 سجل الحضور الحي (شامل كل التفاصيل)</h3>
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
@@ -54,7 +54,7 @@
             </div>
         </div>
 
-        <!-- الأرشيف (تنزيل وحذف) -->
+        <!-- الأرشيف -->
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
             <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📁 أرشيف التقارير السابقة</h3>
             <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
@@ -67,9 +67,9 @@
             </div>
         </div>
 
-        <!-- إدارة بيانات الطلاب (تحكم وتعديل كامل) -->
+        <!-- إدارة الطلاب -->
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
-            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📋 إدارة بيانات الطلاب (تحكم كامل وتعديل الحضور)</h3>
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📋 إدارة بيانات الطلاب (تعديل كامل وعدد مرات الحضور)</h3>
             <button type="button" class="btn btn-secondary" onclick="loadStudentsList()" style="margin-bottom: 10px;">🔄 تحديث قائمة الطلاب</button>
             <div id="studentsTableContainer" style="overflow-x: auto; max-height: 350px;">
                 <p style="color: var(--text-sub);">جاري التحميل...</p>
@@ -133,9 +133,9 @@
         function addNewSubject() {
             const input = document.getElementById('newSubjectInput');
             const val = input.value.trim();
-            if(!val) { alert("أدخل اسم المادة!"); return; }
+            if(!val) { alert("أدخل اسم المادة المراد إضافتها!"); return; }
             let subs = getSavedSubjects();
-            if(subs.includes(val)) { alert("المادة موجودة مسبقاً!"); return; }
+            if(subs.includes(val)) { alert("هذه المادة مضافة بالفعل!"); return; }
             subs.push(val);
             localStorage.setItem('customSubjectsList', JSON.stringify(subs));
             input.value = "";
@@ -148,8 +148,8 @@
             const select = document.getElementById('adminSubjectSelect');
             const val = select.value;
             let subs = getSavedSubjects();
-            if(subs.length <= 1) { alert("يجب أن تبقى مادة واحدة على الأقل!"); return; }
-            if(confirm(`حذف المادة "${val}"؟`)) {
+            if(subs.length <= 1) { alert("يجب الحفاظ على مادة واحدة على الأقل!"); return; }
+            if(confirm(`هل أنت تأكد من حذف مادة "${val}"؟`)) {
                 subs = subs.filter(s => s !== val);
                 localStorage.setItem('customSubjectsList', JSON.stringify(subs));
                 loadSubjectsIntoAdminDropdown();
@@ -177,6 +177,7 @@
             const subjectName = document.getElementById('adminSubjectSelect').value;
             const lectureTitle = document.getElementById('adminCurrentSubject').value.trim() || "المحاضرة الأولى";
             await updateCloudSettings({
+                action: "saveSettings",
                 selectedSubject: subjectName,
                 currentSubject: lectureTitle,
                 isAttendanceOpen: String(currentAttendanceState)
@@ -189,6 +190,7 @@
             const lectureTitle = document.getElementById('adminCurrentSubject').value.trim() || "المحاضرة الأولى";
             
             await updateCloudSettings({
+                action: "saveSettings",
                 selectedSubject: subjectName,
                 currentSubject: lectureTitle,
                 isAttendanceOpen: String(currentAttendanceState)
@@ -202,17 +204,16 @@
             statusMsg.textContent = "⏳ جاري التحديث في السحابة...";
 
             try {
-                await fetch(`${sheetDBUrl}?sheet=Setting`, {
+                await fetch(googleScriptUrl, {
                     method: 'POST',
-                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data: [settingsObj] })
+                    body: JSON.stringify(settingsObj)
                 });
                 statusMsg.style.color = "var(--accent-green)";
-                statusMsg.textContent = "✅ تم حفظ التحديث في الشيت بنجاح!";
+                statusMsg.textContent = "✅ تم حفظ التحديث بنجاح!";
                 alert("✔️ تم الحفظ والتحديث بنجاح!");
             } catch (e) {
                 statusMsg.style.color = "var(--accent-red)";
-                statusMsg.textContent = "❌ خطأ في الاتصال بالسحابة.";
+                statusMsg.textContent = "❌ خطأ في الاتصال.";
             }
         }
 
@@ -220,7 +221,7 @@
             const container = document.getElementById('liveAttendanceContainer');
             container.innerHTML = "جاري التحميل...";
             try {
-                const res = await fetch(`${sheetDBUrl}?sheet=attendance`, { cache: "no-store" });
+                const res = await fetch(`${googleScriptUrl}?action=getLiveAttendance`);
                 const data = await res.json();
                 if(!Array.isArray(data) || data.length === 0) {
                     container.innerHTML = "<p style='color:var(--text-sub);'>لا توجد سجلات حضور حي حالياً.</p>";
@@ -249,7 +250,7 @@
 
         async function deleteAttendanceRow(name) {
             if(confirm(`حذف الطالب ${name} من كشف الحضور؟`)) {
-                await fetch(`${sheetDBUrl}/name/${encodeURIComponent(name)}?sheet=attendance`, { method: 'DELETE' }).catch(()=>{});
+                await fetch(googleScriptUrl, { method: 'POST', body: JSON.stringify({ action: "deleteLiveAttendance", name: name }) }).catch(()=>{});
                 loadLiveAttendanceLog();
             }
         }
@@ -257,27 +258,15 @@
         async function endLectureAndExport() {
             if(confirm("🛑 إنهاء المحاضرة وأرشفة كافة تفاصيل الحضور؟")) {
                 try {
-                    const res = await fetch(`${sheetDBUrl}?sheet=attendance`, { cache: "no-store" });
-                    const list = await res.json();
-                    if(Array.isArray(list) && list.length > 0) {
-                        const entry = {
-                            lectureName: `${document.getElementById('adminSubjectSelect').value} - ${document.getElementById('adminCurrentSubject').value || 'المحاضرة الأولى'}`,
-                            date: new Date().toLocaleString('ar-EG'),
-                            totalStudents: list.length,
-                            details: JSON.stringify(list.map(a => `${a.name} (${a.id})`))
-                        };
-                        
-                        await fetch(`${sheetDBUrl}?sheet=Archive`, {
-                            method: 'POST',
-                            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ data: [entry] })
-                        }).catch(()=>{});
+                    const lectureName = `${document.getElementById('adminSubjectSelect').value} - ${document.getElementById('adminCurrentSubject').value || 'المحاضرة الأولى'}`;
+                    const date = new Date().toLocaleString('ar-EG');
+                    
+                    await fetch(googleScriptUrl, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: "endLecture", lectureName: lectureName, date: date })
+                    }).catch(()=>{});
 
-                        for(let row of list) {
-                            if(row.name) await fetch(`${sheetDBUrl}/name/${encodeURIComponent(row.name)}?sheet=attendance`, { method: 'DELETE' }).catch(()=>{});
-                        }
-                    }
-                    alert("📊 تم إنهاء المحاضرة وأرشفة التقرير بكافة التفاصيل بنجاح!");
+                    alert("📊 تم إنهاء المحاضرة وأرشفة التقرير بنجاح!");
                     loadLiveAttendanceLog();
                     loadArchiveReports();
                 } catch(e) { alert("حدث خطأ أثناء الأرشفة."); }
@@ -288,7 +277,7 @@
             const container = document.getElementById('archiveContainer');
             container.innerHTML = "جاري التحميل...";
             try {
-                const res = await fetch(`${sheetDBUrl}?sheet=Archive`, { cache: "no-store" });
+                const res = await fetch(`${googleScriptUrl}?action=getArchive`);
                 const data = await res.json();
                 if(!Array.isArray(data) || data.length === 0) {
                     container.innerHTML = "<p style='color:var(--text-sub);'>الأرشيف فارغ حالياً.</p>";
@@ -315,14 +304,14 @@
 
         async function deleteArchiveItem(name) {
             if(confirm(`حذف التقرير المؤرشف لـ "${name}"؟`)) {
-                await fetch(`${sheetDBUrl}/lectureName/${encodeURIComponent(name)}?sheet=Archive`, { method: 'DELETE' }).catch(()=>{});
+                await fetch(googleScriptUrl, { method: 'POST', body: JSON.stringify({ action: "deleteArchive", lectureName: name }) }).catch(()=>{});
                 loadArchiveReports();
             }
         }
 
         async function downloadArchive() {
             try {
-                const res = await fetch(`${sheetDBUrl}?sheet=Archive`, { cache: "no-store" });
+                const res = await fetch(`${googleScriptUrl}?action=getArchive`);
                 const data = await res.json();
                 if(!Array.isArray(data) || data.length === 0) { alert("لا توجد تقارير مؤرشفة لتحميلها."); return; }
                 let csv = "LectureName,Date,TotalStudents,Details\n";
@@ -339,13 +328,7 @@
         async function clearArchive() {
             if(confirm("⚠️ مسح الأرشيف بالكامل نهائياً؟")) {
                 try {
-                    const res = await fetch(`${sheetDBUrl}?sheet=Archive`, { cache: "no-store" });
-                    const data = await res.json();
-                    if(Array.isArray(data)) {
-                        for(let r of data) {
-                            if(r.lectureName) await fetch(`${sheetDBUrl}/lectureName/${encodeURIComponent(r.lectureName)}?sheet=Archive`, { method: 'DELETE' }).catch(()=>{});
-                        }
-                    }
+                    await fetch(googleScriptUrl, { method: 'POST', body: JSON.stringify({ action: "clearArchive" }) }).catch(()=>{});
                     alert("🗑️ تم تفريغ الأرشيف بالكامل!");
                     loadArchiveReports();
                 } catch(e) {}
@@ -394,28 +377,26 @@
             const newAttendance = prompt("📊 تعديل عدد مرات الحضور:", currentAttendance);
             if(newAttendance === null) return;
 
-            const updatedData = {
-                id: id,
-                name: newName,
-                phone: newPhone,
-                password: newPass,
-                attendanceCount: newAttendance
-            };
-
             try {
-                await fetch(`${sheetDBUrl}/id/${id}?sheet=students`, {
-                    method: 'PATCH',
-                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data: updatedData })
+                await fetch(googleScriptUrl, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: "editStudent",
+                        id: id,
+                        name: newName,
+                        phone: newPhone,
+                        password: newPass,
+                        attendanceCount: newAttendance
+                    })
                 });
                 alert("✅ تم تعديل بيانات الطالب بنجاح!");
                 loadStudentsList();
-            } catch(e) { alert("حدث خطأ أثناء تعديل بيانات الطالب."); }
+            } catch(e) { alert("حدث خطأ أثناء التعديل."); }
         }
 
         async function deleteStudentRow(id) {
             if(confirm(`حذف الطالب ذو الـ ID (${id}) نهائياً؟`)) {
-                await fetch(`${sheetDBUrl}/id/${id}?sheet=students`, { method: 'DELETE' }).catch(()=>{});
+                await fetch(googleScriptUrl, { method: 'POST', body: JSON.stringify({ action: "deleteStudent", id: id }) }).catch(()=>{});
                 loadStudentsList();
             }
         }
