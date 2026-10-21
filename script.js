@@ -19,13 +19,13 @@ async function fetchAppSettings() {
         const response = await fetch(`${sheetDBUrl}?sheet=Setting`, { cache: "no-store" });
         const data = await response.json();
         if (Array.isArray(data) && data.length > 0) {
-            const settingRow = data.find(row => row.isAttendanceOpen !== undefined || row.isRegistrationOpen !== undefined || row.currentSubject !== undefined);
+            const settingRow = data.find(row => row.isAttendanceOpen !== undefined || row.currentSubject !== undefined);
             if (settingRow) return settingRow;
             return data[0];
         }
-        return { isAttendanceOpen: 'true', isRegistrationOpen: 'true', currentSubject: 'المحاضرة الأولى' };
+        return { isAttendanceOpen: 'true', currentSubject: 'المحاضرة الأولى' };
     } catch (error) {
-        return { isAttendanceOpen: 'true', isRegistrationOpen: 'true', currentSubject: 'المحاضرة الأولى' };
+        return { isAttendanceOpen: 'true', currentSubject: 'المحاضرة الأولى' };
     }
 }
 
@@ -81,15 +81,13 @@ async function createAccount() {
             headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
             body: JSON.stringify({ data: [userData] })
         });
-    } catch (e) {
-        console.warn("خطأ بالاتصال:", e);
-    }
+    } catch (e) {}
 
     alert(`🎉 تم إنشاء حسابك بنجاح!\n\n🆔 الرقم الجامعي: ${newId}\n🔑 كلمة السر: ${password}`);
     window.location.href = 'subjects.html';
 }
 
-function login() {
+async function login() {
     const id = document.getElementById('loginId')?.value.trim();
     const pass = document.getElementById('loginPassword')?.value.trim();
 
@@ -100,18 +98,26 @@ function login() {
 
     let savedUserStr = localStorage.getItem(id);
     
-    // إذا لم يكن مخزناً محلياً على الجهاز، نظهر رسالة المساعدة الفورية وكود Emoo السري
+    // إذا لم يكن الحساب مسجلاً على هذا الجهاز محلياً (أو في حال الأجهزة المتعددة)
     if (!savedUserStr) {
-        const adminOverride = prompt("⚠️ هذا الحساب غير مسجل على هذا الجهاز.\nللمساعدة وتجاوز قيد الجهاز، أدخل كود المشرف السري (Emoo):");
+        const adminOverride = prompt("⚠️ هذا الحساب غير مسجل على هذا الجهاز (أو مسجل على جهاز آخر).\nللمساعدة وتجاوز القيد وفتح الحساب، أدخل كود المشرف السري (Emoo):");
+        
         if (adminOverride !== "Emoo") {
-            alert("❌ الرقم السري غير صحيح. لا يمكن فتح الحساب من جهاز مختلف.");
+            alert("❌ الكود السري غير صحيح. لا يمكن فتح الحساب من جهاز مختلف.");
             return;
         }
+        
         alert("🔓 تم تجاوز قيد الجهاز بواسطة المشرف بنجاح!");
         
-        // إنشاء بيانات مؤقتة أو السماح بالدخول
-        const tempUser = { id: id, name: "طالب (مساعد بواسطة الإدارة)", phone: "-", grade: "-", password: pass };
-        localStorage.setItem('currentUser', JSON.stringify(tempUser));
+        // جلب بيانات الطالب من الشيت أو إنشاء كائن مؤقت للدخول المباشر
+        let targetStudent = null;
+        try {
+            const students = await fetchAllStudentsFromSheet();
+            targetStudent = students.find(s => String(s.id).trim() === id);
+        } catch(e) {}
+
+        const userObj = targetStudent || { id: id, name: "طالب معتمد (استثناء جهاز)", phone: "-", grade: "-", password: pass };
+        localStorage.setItem('currentUser', JSON.stringify(userObj));
         window.location.href = 'subjects.html';
         return;
     }
