@@ -7,9 +7,9 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container" style="max-width: 900px;">
+    <div class="container" style="max-width: 950px;">
         <div class="admin-badge" style="background: rgba(239, 68, 68, 0.1); color: var(--accent-red);">🔐 لوحة الإدارة العليا</div>
-        <h2>لوحة التحكم والتحكم السحابي للمواد</h2>
+        <h2>لوحة التحكم والتحكم السحابي للمواد والطلاب</h2>
 
         <!-- إدارة المواد وحالة الحضور -->
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
@@ -42,34 +42,51 @@
             </div>
         </div>
 
+        <!-- إضافة طالب يدوياً -->
+        <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #10b981;">👤 إضافة طالب جديد يدوياً</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 10px;">
+                <input type="text" id="manualName" placeholder="اسم الطالب الثلاثي" style="padding:8px; background:rgba(255,255,255,0.05); border:1px solid var(--border-color); color:#fff; border-radius:6px;">
+                <input type="text" id="manualPhone" placeholder="رقم الهاتف" style="padding:8px; background:rgba(255,255,255,0.05); border:1px solid var(--border-color); color:#fff; border-radius:6px;">
+                <select id="manualGrade" style="padding:8px; background:rgba(255,255,255,0.05); border:1px solid var(--border-color); color:#fff; border-radius:6px;">
+                    <option value="الفرقة الأولى">الفرقة الأولى</option>
+                    <option value="الفرقة الثانية">الفرقة الثانية</option>
+                    <option value="الفرقة الثالثة">الفرقة الثالثة</option>
+                    <option value="الفرقة الرابعة">الفرقة الرابعة</option>
+                </select>
+                <input type="text" id="manualPassword" placeholder="كلمة السر" style="padding:8px; background:rgba(255,255,255,0.05); border:1px solid var(--border-color); color:#fff; border-radius:6px;">
+            </div>
+            <button type="button" class="btn" onclick="addStudentManual()" style="background: #10b981; width: 100%;">➕ تسجيل حساب الطالب سحابياً</button>
+        </div>
+
         <!-- سجل الحضور الحي -->
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
-            <h3 style="font-size: 16px; margin-bottom: 10px; color: #10b981;">📊 سجل الحضور الحي (شامل كل التفاصيل)</h3>
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #10b981;">📊 سجل الحضور الحي (المحاضرة الحالية)</h3>
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                 <button type="button" class="btn btn-secondary" onclick="loadLiveAttendanceLog()" style="flex:1;">🔄 تحديث السجل</button>
-                <button type="button" class="btn" onclick="endLectureAndExport()" style="background: var(--accent-red); flex:1;">🛑 إنهاء المحاضرة وأرشفة التقرير</button>
+                <button type="button" class="btn" onclick="endLectureAndExport()" style="background: var(--accent-red); flex:1;">🛑 إنهاء المحاضرة وأرشفة التقرير بالأسماء</button>
             </div>
             <div id="liveAttendanceContainer" style="overflow-x: auto; max-height: 280px;">
                 <p style="color: var(--text-sub);">جاري التحميل...</p>
             </div>
         </div>
 
-        <!-- الأرشيف -->
+        <!-- الأرشيف المفصل -->
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
-            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📁 أرشيف التقارير السابقة</h3>
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📁 أرشيف التقارير (شامل قائمة الحاضرين)</h3>
             <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
                 <button type="button" class="btn btn-secondary" onclick="loadArchiveReports()" style="flex:1;">🔄 تحديث الأرشيف</button>
-                <button type="button" class="btn" onclick="downloadArchive()" style="background: #10b981; flex:1;">📥 تحميل الأرشيف (CSV)</button>
+                <button type="button" class="btn" onclick="downloadArchive()" style="background: #10b981; flex:1;">📥 تحميل الأرشيف المفصل (CSV)</button>
                 <button type="button" class="btn" onclick="clearArchive()" style="background: var(--accent-red); flex:1;">🗑️ مسح الأرشيف بالكامل</button>
             </div>
-            <div id="archiveContainer" style="overflow-x: auto; max-height: 200px;">
+            <div id="archiveContainer" style="overflow-x: auto; max-height: 250px;">
                 <p style="color: var(--text-sub);">جاري التحميل...</p>
             </div>
         </div>
 
-        <!-- إدارة الطلاب -->
+        <!-- إدارة الطلاب الكاملة -->
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
-            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📋 إدارة بيانات الطلاب (تعديل كامل وعدد مرات الحضور)</h3>
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📋 إدارة بيانات الطلاب (تعديل كلي وشامل لكافة الحقول)</h3>
             <button type="button" class="btn btn-secondary" onclick="loadStudentsList()" style="margin-bottom: 10px;">🔄 تحديث قائمة الطلاب</button>
             <div id="studentsTableContainer" style="overflow-x: auto; max-height: 350px;">
                 <p style="color: var(--text-sub);">جاري التحميل...</p>
@@ -217,6 +234,38 @@
             }
         }
 
+        async function addStudentManual() {
+            const name = document.getElementById('manualName').value.trim();
+            const phone = document.getElementById('manualPhone').value.trim();
+            const grade = document.getElementById('manualGrade').value;
+            const password = document.getElementById('manualPassword').value.trim();
+
+            if(!name || !phone || !password) {
+                alert("⚠️ يرجى تعبئة كافة حقول الطالب!");
+                return;
+            }
+
+            const newId = generateStudentID();
+            const userData = {
+                action: "createStudent",
+                id: newId,
+                name: name,
+                phone: phone,
+                grade: grade,
+                password: password,
+                boundDeviceId: "MANUAL_BY_ADMIN"
+            };
+
+            try {
+                await fetch(googleScriptUrl, { method: 'POST', body: JSON.stringify(userData) });
+                alert(`🎉 تم إدراج الطالب بنجاح!\nالرقم الجامعي: ${newId}\nكلمة السر: ${password}`);
+                document.getElementById('manualName').value = "";
+                document.getElementById('manualPhone').value = "";
+                document.getElementById('manualPassword').value = "";
+                loadStudentsList();
+            } catch(e) { alert("حدث خطأ أثناء الإضافة."); }
+        }
+
         async function loadLiveAttendanceLog() {
             const container = document.getElementById('liveAttendanceContainer');
             container.innerHTML = "جاري التحميل...";
@@ -256,7 +305,7 @@
         }
 
         async function endLectureAndExport() {
-            if(confirm("🛑 إنهاء المحاضرة وأرشفة كافة تفاصيل الحضور؟")) {
+            if(confirm("🛑 إنهاء المحاضرة وأرشفة كافة تفاصيل الحضور بالأسماء؟")) {
                 try {
                     const lectureName = `${document.getElementById('adminSubjectSelect').value} - ${document.getElementById('adminCurrentSubject').value || 'المحاضرة الأولى'}`;
                     const date = new Date().toLocaleString('ar-EG');
@@ -266,7 +315,7 @@
                         body: JSON.stringify({ action: "endLecture", lectureName: lectureName, date: date })
                     }).catch(()=>{});
 
-                    alert("📊 تم إنهاء المحاضرة وأرشفة التقرير بنجاح!");
+                    alert("📊 تم إنهاء المحاضرة وأرشفة التقرير بالأسماء بنجاح!");
                     loadLiveAttendanceLog();
                     loadArchiveReports();
                 } catch(e) { alert("حدث خطأ أثناء الأرشفة."); }
@@ -283,14 +332,14 @@
                     container.innerHTML = "<p style='color:var(--text-sub);'>الأرشيف فارغ حالياً.</p>";
                     return;
                 }
-                let html = `<table style="width:100%; border-collapse:collapse; font-size:12px;"><tr style="background:rgba(255,255,255,0.05); text-align:right;"><th>المحاضرة</th><th>التاريخ</th><th>العدد</th><th>التفاصيل</th><th>حذف</th></tr>`;
+                let html = `<table style="width:100%; border-collapse:collapse; font-size:12px;"><tr style="background:rgba(255,255,255,0.05); text-align:right;"><th>المحاضرة</th><th>التاريخ</th><th>العدد</th><th>قائمة الحاضرين التفصيلية</th><th>حذف</th></tr>`;
                 data.forEach(row => {
                     if(row.lectureName) {
                         html += `<tr style="border-bottom:1px solid var(--border-color);">
                             <td style="font-weight:bold; color:#38bdf8;">${row.lectureName}</td>
                             <td>${row.date || '-'}</td>
-                            <td style="color:var(--accent-green);">${row.totalStudents || 0}</td>
-                            <td style="font-size:11px;">${row.details || '-'}</td>
+                            <td style="color:var(--accent-green); font-weight:bold;">${row.totalStudents || 0}</td>
+                            <td style="font-size:11px; max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${row.details || ''}">${row.details || '-'}</td>
                             <td><button onclick="deleteArchiveItem('${row.lectureName}')" style="background:var(--accent-red); color:#fff; border:none; padding:3px 6px; border-radius:4px;">حذف</button></td>
                         </tr>`;
                     }
@@ -314,13 +363,13 @@
                 const res = await fetch(`${googleScriptUrl}?action=getArchive`);
                 const data = await res.json();
                 if(!Array.isArray(data) || data.length === 0) { alert("لا توجد تقارير مؤرشفة لتحميلها."); return; }
-                let csv = "LectureName,Date,TotalStudents,Details\n";
+                let csv = "LectureName,Date,TotalStudents,AttendedStudentsDetails\n";
                 data.forEach(r => csv += `"${r.lectureName || ''}","${r.date || ''}","${r.totalStudents || 0}","${(r.details || '').replace(/"/g, '""')}"\n`);
                 const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'Archive_Reports.csv';
+                a.download = 'Archive_Detailed_Reports.csv';
                 a.click();
             } catch(e) { alert("حدث خطأ أثناء تحميل الأرشيف."); }
         }
@@ -344,14 +393,15 @@
                     container.innerHTML = "<p style='color:var(--text-sub);'>لا توجد بيانات طلاب مسجلة.</p>";
                     return;
                 }
-                let html = `<table style="width:100%; border-collapse:collapse; font-size:12px;"><tr style="background:rgba(255,255,255,0.05); text-align:right;"><th>ID</th><th>الاسم</th><th>الهاتف</th><th>السر</th><th>الحضور</th><th>تعديل/حذف</th></tr>`;
+                let html = `<table style="width:100%; border-collapse:collapse; font-size:12px;"><tr style="background:rgba(255,255,255,0.05); text-align:right;"><th>ID</th><th>الاسم</th><th>الهاتف</th><th>الفرقة</th><th>كلمة السر</th><th>الحضور</th><th>تعديل/حذف</th></tr>`;
                 students.forEach(st => {
                     if(st.id) {
                         html += `<tr style="border-bottom:1px solid var(--border-color);">
-                            <td>${st.id}</td>
+                            <td style="color:#38bdf8; font-weight:bold;">${st.id}</td>
                             <td>${st.name}</td>
                             <td>${st.phone}</td>
-                            <td>${st.password || '-'}</td>
+                            <td>${st.grade || '-'}</td>
+                            <td style="color:#f59e0b; font-family:monospace;">${st.password || '-'}</td>
                             <td style="color:var(--accent-green); font-weight:bold;">${st.attendanceCount || 0} مرة</td>
                             <td>
                                 <button onclick="editStudentData('${st.id}', '${st.name}', '${st.phone}', '${st.password || ''}', '${st.attendanceCount || 0}')" style="background:#38bdf8; color:#fff; border:none; padding:3px 6px; border-radius:4px; margin-left:2px;">✏️</button>
