@@ -12,13 +12,9 @@
         <h2>اختر المادة لتسجيل الحضور</h2>
         <p id="welcomeStudent" style="color: var(--text-sub); margin-bottom: 25px;"></p>
 
-        <!-- قائمة المواد الدراسية -->
-        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px;">
-            <button class="btn" onclick="selectSubject('نشأة وسائل الاتصال')" style="background: #4f46e5; padding: 15px; font-size: 16px;">📚 نشأة وسائل الاتصال</button>
-            <button class="btn" onclick="selectSubject('رأي عام')" style="background: #4f46e5; padding: 15px; font-size: 16px;">📚 رأي عام</button>
-            <button class="btn" onclick="selectSubject('صحافة استقصائية')" style="background: #4f46e5; padding: 15px; font-size: 16px;">📚 صحافة استقصائية</button>
-            <button class="btn" onclick="selectSubject('إذاعة وتلفزيون')" style="background: #4f46e5; padding: 15px; font-size: 16px;">📚 إذاعة وتلفزيون</button>
-            <button class="btn" onclick="selectSubject('إعلان وترويج')" style="background: #4f46e5; padding: 15px; font-size: 16px;">📚 إعلان وترويج</button>
+        <!-- حاوية قائمة المواد الديناميكية -->
+        <div id="subjectsListContainer" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px;">
+            <p style="color: var(--text-sub);">جاري تحميل المواد الدراسية...</p>
         </div>
 
         <button class="btn btn-secondary" onclick="logout()" style="background: var(--accent-red); margin-top: 10px;">🚪 تسجيل الخروج</button>
@@ -35,6 +31,37 @@
             window.location.href = 'index.html';
         } else {
             document.getElementById('welcomeStudent').textContent = `أهلاً بك، ${currentUser.name} (ID: ${currentUser.id})`;
+            renderSubjectsList();
+        }
+
+        function getSubjects() {
+            let subs = JSON.parse(localStorage.getItem('customSubjectsList'));
+            if (!subs || !Array.isArray(subs) || subs.length === 0) {
+                subs = [
+                    "نشأة وسائل الاتصال - د. مصطفى مندي",
+                    "رأي عام",
+                    "صحافة استقصائية",
+                    "إذاعة وتلفزيون",
+                    "إعلان وترويج"
+                ];
+                localStorage.setItem('customSubjectsList', JSON.stringify(subs));
+            }
+            return subs;
+        }
+
+        function renderSubjectsList() {
+            const container = document.getElementById('subjectsListContainer');
+            const subjects = getSubjects();
+            container.innerHTML = "";
+
+            subjects.forEach(sub => {
+                const btn = document.createElement('button');
+                btn.className = 'btn';
+                btn.style.cssText = 'background: #4f46e5; padding: 15px; font-size: 16px; border: none; cursor: pointer; border-radius: 8px; color: #fff; width: 100%;';
+                btn.textContent = `📚 ${sub}`;
+                btn.onclick = function() { selectSubject(sub); };
+                container.appendChild(btn);
+            });
         }
 
         function selectSubject(subjectName) {
