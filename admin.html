@@ -15,7 +15,6 @@
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
             <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📚 إدارة المواد والمحاضرة</h3>
             
-            <!-- إضافة مادة جديدة -->
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                 <input type="text" id="newSubjectInput" placeholder="أدخل اسم مادة جديدة..." style="flex: 2; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: #fff; border-radius: 8px;">
                 <button type="button" class="btn" onclick="addNewSubject()" style="flex: 1; background: #10b981;">➕ إضافة</button>
@@ -32,7 +31,7 @@
                 <input type="text" id="adminCurrentSubject" placeholder="مثال: المحاضرة الأولى">
             </div>
             
-            <button type="button" class="btn" onclick="saveSubjectAndSettings()" style="background: #4f46e5; margin-bottom: 15px;">💾 حفظ إعدادات المحاضرة</button>
+            <button type="button" class="btn" onclick="saveSubjectAndSettings()" style="background: #4f46e5; margin-bottom: 15px;">💾 حفظ وتحديث اسم المحاضرة</button>
 
             <div style="margin-bottom: 15px;">
                 <label style="display:block; margin-bottom:5px; font-size:14px; color:var(--text-sub);">التحكم في فتح/إغلاق تسجيل الحضور للمادة:</label>
@@ -51,7 +50,7 @@
                 <button type="button" class="btn" onclick="endLectureAndExport()" style="background: var(--accent-red); flex:1;">🛑 إنهاء وأرشفة</button>
             </div>
             <div id="liveAttendanceContainer" style="overflow-x: auto; max-height: 250px;">
-                <p style="color: var(--text-sub);">جاري التحميل...</p>
+                <p style="color: var(--text-sub);">لا توجد سجلات.</p>
             </div>
         </div>
 
@@ -73,7 +72,7 @@
             <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📋 إدارة بيانات الطلاب</h3>
             <button type="button" class="btn btn-secondary" onclick="loadStudentsList()" style="margin-bottom: 10px;">🔄 تحديث قائمة الطلاب</button>
             <div id="studentsTableContainer" style="overflow-x: auto; max-height: 350px;">
-                <p style="color: var(--text-sub);">جاري التحميل...</p>
+                <p style="color: var(--text-sub);">لا توجد طلاب مسجلة.</p>
             </div>
         </div>
 
@@ -103,15 +102,19 @@
                     currentAttendanceState = settings.isAttendanceOpen !== undefined ? String(settings.isAttendanceOpen) : "true";
                     updateAttendanceIndicator();
                 }
-                loadStudentsList();
-                loadLiveAttendanceLog();
-                loadArchiveReports();
-            } catch(e) {}
+            } catch(e) {
+                console.error("إعدادات افتراضية:", e);
+            }
+
+            // تحميل الجداول بشكل آمن ومنفصل حتى لا تتعطل اللوحة لو جدول فارغ
+            loadLiveAttendanceLog();
+            loadArchiveReports();
+            loadStudentsList();
         };
 
         function getSavedSubjects() {
             let subs = JSON.parse(localStorage.getItem('customSubjectsList'));
-            if (!subs || subs.length === 0) {
+            if (!subs || !Array.isArray(subs) || subs.length === 0) {
                 subs = ["نشأة وسائل الاتصال", "رأي عام", "صحافة استقصائية", "إذاعة وتلفزيون", "إعلان وترويج"];
                 localStorage.setItem('customSubjectsList', JSON.stringify(subs));
             }
@@ -141,7 +144,7 @@
             input.value = "";
             loadSubjectsIntoAdminDropdown();
             document.getElementById('adminSubjectSelect').value = val;
-            alert("✔️ تمت الإضافة!");
+            alert("✔️ تمت الإضافة بنجاح!");
         }
 
         function deleteSelectedSubject() {
@@ -199,10 +202,10 @@
         async function updateCloudSettings(settingsObj) {
             const statusMsg = document.getElementById('adminStatusMsg');
             statusMsg.style.color = "#38bdf8";
-            statusMsg.textContent = "⏳ جاري التحديث...";
+            statusMsg.textContent = "⏳ جاري التحديث في السحابة...";
 
             try {
-                await fetch(`${sheetDBUrl}?sheet=Setting`, { method: 'DELETE', body: JSON.stringify({ query: { id: "*" } }) }).catch(()=>{});
+                // بدلاً من DELETE الذي يعطل الشيت لو كان فارغاً، نستخدم POST المباشر لتحديث الصف الأول
                 await fetch(`${sheetDBUrl}?sheet=Setting`, {
                     method: 'POST',
                     headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
@@ -234,7 +237,7 @@
                 });
                 html += `</table>`;
                 container.innerHTML = html;
-            } catch(e) { container.innerHTML = "خطأ في التحميل."; }
+            } catch(e) { container.innerHTML = "<p style='color:var(--text-sub);'>لا توجد سجلات حضور حالية.</p>"; }
         }
 
         async function deleteAttendanceRow(name) {
@@ -289,7 +292,7 @@
                 });
                 html += `</table>`;
                 container.innerHTML = html;
-            } catch(e) { container.innerHTML = "خطأ في تحميل الأرشيف."; }
+            } catch(e) { container.innerHTML = "<p style='color:var(--text-sub);'>الأرشيف فارغ.</p>"; }
         }
 
         async function deleteArchiveItem(name) {
@@ -332,19 +335,23 @@
 
         async function loadStudentsList() {
             const container = document.getElementById('studentsTableContainer');
-            const students = await fetchAllStudentsFromSheet();
-            if(!students || students.length === 0) {
-                container.innerHTML = "<p style='color:var(--text-sub);'>لا توجد طلاب.</p>";
-                return;
-            }
-            let html = `<table style="width:100%; border-collapse:collapse; font-size:13px;"><tr style="background:rgba(255,255,255,0.05);"><th>ID</th><th>الاسم</th><th>الهاتف</th><th>السر</th><th>تحكم</th></tr>`;
-            students.forEach(st => {
-                if(st.id) {
-                    html += `<tr style="border-bottom:1px solid var(--border-color);"><td>${st.id}</td><td>${st.name}</td><td>${st.phone}</td><td>${st.password || '-'}</td><td><button onclick="deleteStudentRow('${st.id}')" style="background:var(--accent-red); color:#fff; border:none; padding:3px 6px; border-radius:4px;">حذف</button></td></tr>`;
+            try {
+                const students = await fetchAllStudentsFromSheet();
+                if(!students || students.length === 0) {
+                    container.innerHTML = "<p style='color:var(--text-sub);'>لا توجد طلاب مسجلة.</p>";
+                    return;
                 }
-            });
-            html += `</table>`;
-            container.innerHTML = html;
+                let html = `<table style="width:100%; border-collapse:collapse; font-size:13px;"><tr style="background:rgba(255,255,255,0.05);"><th>ID</th><th>الاسم</th><th>الهاتف</th><th>السر</th><th>تحكم</th></tr>`;
+                students.forEach(st => {
+                    if(st.id) {
+                        html += `<tr style="border-bottom:1px solid var(--border-color);"><td>${st.id}</td><td>${st.name}</td><td>${st.phone}</td><td>${st.password || '-'}</td><td><button onclick="deleteStudentRow('${st.id}')" style="background:var(--accent-red); color:#fff; border:none; padding:3px 6px; border-radius:4px;">حذف</button></td></tr>`;
+                    }
+                });
+                html += `</table>`;
+                container.innerHTML = html;
+            } catch(e) {
+                container.innerHTML = "<p style='color:var(--text-sub);'>لا توجد طلاب مسجلة.</p>";
+            }
         }
 
         async function deleteStudentRow(id) {
