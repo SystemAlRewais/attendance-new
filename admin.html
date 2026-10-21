@@ -9,34 +9,40 @@
 <body>
     <div class="container" style="max-width: 800px;">
         <div class="admin-badge" style="background: rgba(239, 68, 68, 0.1); color: var(--accent-red);">🔐 لوحة الإدارة العليا</div>
-        <h2>لوحة التحكم والتحكم السحابي</h2>
+        <h2>لوحة التحكم والتحكم السحابي للمواد</h2>
 
-        <!-- الإعدادات العامة وحالة الأزرار التفاعلية -->
+        <!-- إعدادات المادة وحالة الحضور -->
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
-            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">⚙️ إعدادات الجلسة والمواد</h3>
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📚 اختيار المادة والمحاضرة</h3>
+            
             <div class="input-group">
-                <label>عنوان المحاضرة الحالية:</label>
-                <input type="text" id="adminCurrentSubject" placeholder="مثال: نشأة وسائل الاتصال">
-            </div>
-            <button type="button" class="btn" onclick="saveAdminSubject()" style="background: #4f46e5; margin-bottom: 15px;">💾 حفظ عنوان المحاضرة</button>
-
-            <div style="margin-bottom: 15px;">
-                <label style="display:block; margin-bottom:5px; font-size:14px; color:var(--text-sub);">حالة بوابة الحضور والتسجيل للمادة الحالية:</label>
-                <div style="display: flex; gap: 10px;">
-                    <button type="button" id="btnOpenAttendance" class="btn" onclick="toggleSetting('isAttendanceOpen', 'true')" style="flex:1;">🟢 فتح الحضور</button>
-                    <button type="button" id="btnCloseAttendance" class="btn" onclick="toggleSetting('isAttendanceOpen', 'false')" style="flex:1; background: var(--accent-red);">🔴 إغلاق الحضور</button>
-                </div>
+                <label>اختر المادة:</label>
+                <select id="adminSubjectSelect" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: #fff; border-radius: 8px; margin-bottom: 10px;">
+                    <option value="نشأة وسائل الاتصال">نشأة وسائل الاتصال</option>
+                    <option value="رأي عام">رأي عام</option>
+                    <option value="صحافة استقصائية">صحافة استقصائية</option>
+                    <option value="إذاعة وتلفزيون">إذاعة وتلفزيون</option>
+                    <option value="إعلان وتبرع">إعلان وترويج</option>
+                </select>
             </div>
 
+            <div class="input-group">
+                <label>عنوان المحاضرة:</label>
+                <input type="text" id="adminCurrentSubject" placeholder="مثال: المحاضرة الأولى">
+            </div>
+            
+            <button type="button" class="btn" onclick="saveSubjectAndSettings()" style="background: #4f46e5; margin-bottom: 15px;">💾 حفظ إعدادات المادة والمحاضرة</button>
+
             <div style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px; font-size:14px; color:var(--text-sub);">التحكم في تسجيل الحضور للمادة المختارة:</label>
                 <div style="display: flex; gap: 10px;">
-                    <button type="button" id="btnOpenReg" class="btn" onclick="toggleSetting('isRegistrationOpen', 'true')" style="flex:1;">🟢 فتح تسجيل الحسابات</button>
-                    <button type="button" id="btnCloseReg" class="btn" onclick="toggleSetting('isRegistrationOpen', 'false')" style="flex:1; background: var(--accent-red);">🔴 إغلاق تسجيل الحسابات</button>
+                    <button type="button" id="btnToggleAttendance" class="btn" onclick="toggleAttendanceState()" style="flex:1; background: #10b981;">🟢 فتح / إغلاق الحضور</button>
                 </div>
+                <p id="attendanceStatusIndicator" style="margin-top: 8px; font-weight: bold; font-size: 13px;"></p>
             </div>
         </div>
 
-        <!-- 📋 قسم سجل حضور المحاضرة الحالية -->
+        <!-- سجل الحضور الحي -->
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
             <h3 style="font-size: 16px; margin-bottom: 10px; color: #10b981;">📊 سجل حضور المحاضرة الحالية</h3>
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
@@ -48,9 +54,9 @@
             </div>
         </div>
 
-        <!-- 📁 أرشيف التقارير والسجلات القديمة مع أزرار التحميل والحذف -->
+        <!-- أرشيف التقارير -->
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
-            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📁 أرشيف المحاضرات والتقارير السابقة</h3>
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📁 أرشيف التقارير السابقة</h3>
             <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
                 <button type="button" class="btn btn-secondary" onclick="loadArchiveReports()" style="flex:1;">🔄 تحديث الأرشيف</button>
                 <button type="button" class="btn" onclick="downloadArchive()" style="background: #10b981; flex:1;">📥 تحميل الأرشيف</button>
@@ -63,7 +69,7 @@
 
         <!-- إدارة الطلاب -->
         <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px;">
-            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📋 سجل الطلاب المسجلين بالكامل</h3>
+            <h3 style="font-size: 16px; margin-bottom: 10px; color: #38bdf8;">📋 إدارة بيانات الطلاب (تحكم كامل)</h3>
             <button type="button" class="btn btn-secondary" onclick="loadStudentsList()" style="margin-bottom: 10px;">🔄 تحديث قائمة الطلاب</button>
             <div id="studentsTableContainer" style="overflow-x: auto; max-height: 350px;">
                 <p style="color: var(--text-sub);">اضغط على تحديث لعرض الطلاب...</p>
@@ -76,6 +82,8 @@
 
     <script src="script.js"></script>
     <script>
+        let currentAttendanceState = "true";
+
         window.onload = async function() {
             const pass = prompt("🔐 أدخل الرقم السري الخاص بالإدارة:");
             if (pass !== "44554455") {
@@ -88,7 +96,9 @@
                 const settings = await fetchAppSettings();
                 if(settings) {
                     if(settings.currentSubject) document.getElementById('adminCurrentSubject').value = settings.currentSubject;
-                    updateUIButtonsState(settings.isAttendanceOpen, settings.isRegistrationOpen);
+                    if(settings.selectedSubject) document.getElementById('adminSubjectSelect').value = settings.selectedSubject;
+                    currentAttendanceState = settings.isAttendanceOpen !== undefined ? String(settings.isAttendanceOpen) : "true";
+                    updateAttendanceIndicator();
                 }
                 loadStudentsList();
                 loadLiveAttendanceLog();
@@ -98,65 +108,66 @@
             }
         };
 
-        function updateUIButtonsState(isAttOpen, isRegOpen) {
-            const attOpen = String(isAttOpen).trim() === 'true';
-            const regOpen = String(isRegOpen).trim() === 'true';
-
-            document.getElementById('btnOpenAttendance').style.opacity = attOpen ? "1" : "0.3";
-            document.getElementById('btnCloseAttendance').style.opacity = !attOpen ? "1" : "0.3";
-
-            document.getElementById('btnOpenReg').style.opacity = regOpen ? "1" : "0.3";
-            document.getElementById('btnCloseReg').style.opacity = !regOpen ? "1" : "0.3";
+        function updateAttendanceIndicator() {
+            const indicator = document.getElementById('attendanceStatusIndicator');
+            const btn = document.getElementById('btnToggleAttendance');
+            if(currentAttendanceState === "true") {
+                indicator.style.color = "var(--accent-green)";
+                indicator.textContent = "🟢 الحالة الحالية: تسجيل الحضور متاح ومفتوح للطلاب.";
+                btn.textContent = "🔴 إغلاق تسجيل الحضور";
+                btn.style.background = "var(--accent-red)";
+            } else {
+                indicator.style.color = "var(--accent-red)";
+                indicator.textContent = "🔴 الحالة الحالية: تسجيل الحضور مغلق حالياً.";
+                btn.textContent = "🟢 فتح تسجيل الحضور";
+                btn.style.background = "var(--accent-green)";
+            }
         }
 
-        async function saveAdminSubject() {
-            const subjectVal = document.getElementById('adminCurrentSubject').value.trim();
-            if(!subjectVal) {
+        async function saveSubjectAndSettings() {
+            const subjectName = document.getElementById('adminSubjectSelect').value;
+            const lectureTitle = document.getElementById('adminCurrentSubject').value.trim();
+            if(!lectureTitle) {
                 alert("يرجى كتابة عنوان المحاضرة!");
                 return;
             }
-            await updateAdminSettingDirect('currentSubject', subjectVal);
+            await updateCloudSettings({
+                selectedSubject: subjectName,
+                currentSubject: lectureTitle,
+                isAttendanceOpen: currentAttendanceState
+            });
         }
 
-        async function toggleSetting(key, value) {
-            await updateAdminSettingDirect(key, value);
+        async function toggleAttendanceState() {
+            currentAttendanceState = (currentAttendanceState === "true") ? "false" : "true";
+            const subjectName = document.getElementById('adminSubjectSelect').value;
+            const lectureTitle = document.getElementById('adminCurrentSubject').value.trim() || "محاضرة عامة";
+            
+            await updateCloudSettings({
+                selectedSubject: subjectName,
+                currentSubject: lectureTitle,
+                isAttendanceOpen: currentAttendanceState
+            });
+            updateAttendanceIndicator();
         }
 
-        async function updateAdminSettingDirect(key, value) {
+        async function updateCloudSettings(settingsObj) {
             const statusMsg = document.getElementById('adminStatusMsg');
             statusMsg.style.color = "#38bdf8";
-            statusMsg.textContent = "⏳ جاري التحديث في السحابة...";
+            statusMsg.textContent = "⏳ جاري حفظ وتحديث الإعدادات سحابياً...";
 
             try {
-                let currentSettings = { currentSubject: "المحاضرة الأولى", isAttendanceOpen: "true", isRegistrationOpen: "true" };
-                try {
-                    const res = await fetch(`${sheetDBUrl}?sheet=Setting`, { cache: "no-store" });
-                    const data = await res.json();
-                    if (Array.isArray(data) && data.length > 0) {
-                        currentSettings = data[0];
-                    }
-                } catch(e) {}
-
-                currentSettings[key] = value;
-                if(key !== 'currentSubject') {
-                    const subjectInput = document.getElementById('adminCurrentSubject').value.trim();
-                    if(subjectInput) currentSettings.currentSubject = subjectInput;
-                }
-
                 await fetch(`${sheetDBUrl}?sheet=Setting`, { method: 'DELETE', body: JSON.stringify({ query: { id: "*" } }) }).catch(()=>{});
                 
                 await fetch(`${sheetDBUrl}?sheet=Setting`, {
                     method: 'POST',
                     headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data: [currentSettings] })
+                    body: JSON.stringify({ data: [settingsObj] })
                 });
 
-                updateUIButtonsState(currentSettings.isAttendanceOpen, currentSettings.isRegistrationOpen);
-
                 statusMsg.style.color = "var(--accent-green)";
-                statusMsg.textContent = `✅ تم التحديث بنجاح!`;
-                alert("✔️ تم حفظ وتحديث الإعدادات بنجاح!");
-
+                statusMsg.textContent = "✅ تم تحديث وحفظ الإعدادات بنجاح!";
+                alert("✔️ تم تحديث الحالة والمادة بنجاح في السحابة!");
             } catch (e) {
                 console.error(e);
                 statusMsg.style.color = "var(--accent-red)";
@@ -180,7 +191,7 @@
                         <th style="padding:8px;">اسم الطالب</th>
                         <th style="padding:8px;">المادة</th>
                         <th style="padding:8px;">وقت التسجيل</th>
-                        <th style="padding:8px;">الحالة</th>
+                        <th style="padding:8px;">إجراء</th>
                     </tr>`;
 
                 data.forEach((row) => {
@@ -189,7 +200,7 @@
                             <td style="padding:8px; font-weight:bold; color:#38bdf8;">${row.name}</td>
                             <td style="padding:8px;">${row.subject || '-'}</td>
                             <td style="padding:8px; font-size:11px;">${row.time || '-'}</td>
-                            <td style="padding:8px; color:var(--accent-green);">✔️ مسجل</td>
+                            <td style="padding:8px;"><button onclick="deleteAttendanceRow('${row.name}')" style="background:var(--accent-red); color:#fff; border:none; padding:3px 6px; border-radius:4px;">حذف</button></td>
                         </tr>`;
                     }
                 });
@@ -197,6 +208,13 @@
                 container.innerHTML = html;
             } catch(e) {
                 container.innerHTML = "<p style='color:var(--accent-red);'>فشل في جلب سجل الحضور.</p>";
+            }
+        }
+
+        async function deleteAttendanceRow(name) {
+            if(confirm(`هل تريد حذف الطالب ${name} من الحضور الحالي؟`)) {
+                await fetch(`${sheetDBUrl}/name/${encodeURIComponent(name)}?sheet=attendance`, { method: 'DELETE' }).catch(()=>{});
+                loadLiveAttendanceLog();
             }
         }
 
@@ -208,8 +226,9 @@
 
                     if(Array.isArray(currentAttendance) && currentAttendance.length > 0) {
                         const lectureTitle = document.getElementById('adminCurrentSubject').value || "محاضرة عامة";
+                        const subName = document.getElementById('adminSubjectSelect').value;
                         const archiveEntry = {
-                            lectureName: lectureTitle,
+                            lectureName: `${subName} - ${lectureTitle}`,
                             date: new Date().toLocaleString('ar-EG'),
                             totalStudents: currentAttendance.length,
                             details: JSON.stringify(currentAttendance.map(a => a.name))
@@ -253,6 +272,7 @@
                         <th style="padding:8px;">التاريخ</th>
                         <th style="padding:8px;">العدد</th>
                         <th style="padding:8px;">الطلاب</th>
+                        <th style="padding:8px;">إجراء</th>
                     </tr>`;
 
                 data.forEach((row) => {
@@ -262,6 +282,7 @@
                             <td style="padding:8px; font-size:11px;">${row.date || '-'}</td>
                             <td style="padding:8px; color:var(--accent-green);">${row.totalStudents || 0}</td>
                             <td style="padding:8px; font-size:11px;">${row.details || '-'}</td>
+                            <td style="padding:8px;"><button onclick="deleteArchiveItem('${row.lectureName}')" style="background:var(--accent-red); color:#fff; border:none; padding:3px 6px; border-radius:4px;">حذف</button></td>
                         </tr>`;
                     }
                 });
@@ -272,12 +293,19 @@
             }
         }
 
+        async function deleteArchiveItem(lectureName) {
+            if(confirm(`هل تريد حذف تقرير المحاضرة "${lectureName}" من الأرشيف؟`)) {
+                await fetch(`${sheetDBUrl}/lectureName/${encodeURIComponent(lectureName)}?sheet=Archive`, { method: 'DELETE' }).catch(()=>{});
+                loadArchiveReports();
+            }
+        }
+
         async function downloadArchive() {
             try {
                 const response = await fetch(`${sheetDBUrl}?sheet=Archive`, { cache: "no-store" });
                 const data = await response.json();
                 if(!Array.isArray(data) || data.length === 0) {
-                    alert("لا توجد بيانات أرشيف لتحميلها.");
+                    alert("لا توجد بيانات لتحميلها.");
                     return;
                 }
                 let csv = "LectureName,Date,TotalStudents,Details\n";
@@ -288,21 +316,21 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'Archive_Reports.csv';
+                a.download = 'Archive_Report.csv';
                 a.click();
             } catch(e) {
-                alert("حدث خطأ أثناء تحميل الأرشيف.");
+                alert("حدث خطأ أثناء التحميل.");
             }
         }
 
         async function clearArchive() {
-            if(confirm("⚠️ هل أنت متأكد من حذف تفريغ الأرشيف بالكامل؟")) {
+            if(confirm("⚠️ هل أنت متأكد من مسح كافة صفوف الأرشيف؟")) {
                 try {
                     await fetch(`${sheetDBUrl}?sheet=Archive`, { method: 'DELETE', body: JSON.stringify({ query: { lectureName: "*" } }) }).catch(()=>{});
-                    alert("🗑️ تم مسح الأرشيف بنجاح!");
+                    alert("🗑️ تم مسح الأرشيف بالكامل بنجاح!");
                     loadArchiveReports();
                 } catch(e) {
-                    alert("❌ حدث خطأ أثناء الحذف.");
+                    alert("❌ حدث خطأ أثناء مسح الأرشيف.");
                 }
             }
         }
@@ -316,12 +344,16 @@
             }
             let html = `<table style="width:100%; border-collapse:collapse; font-size:13px;">
                 <tr style="background:rgba(255,255,255,0.05); text-align:right;">
-                    <th style="padding:8px;">ID</th><th style="padding:8px;">الاسم</th><th style="padding:8px;">الهاتف</th><th style="padding:8px;">إجراءات</th>
+                    <th style="padding:8px;">ID</th><th style="padding:8px;">الاسم</th><th style="padding:8px;">الهاتف</th><th style="padding:8px;">الفرقة</th><th style="padding:8px;">كلمة السر</th><th style="padding:8px;">تحكم</th>
                 </tr>`;
             students.forEach((st) => {
                 if(st.id) {
                     html += `<tr style="border-bottom:1px solid var(--border-color);">
-                        <td style="padding:8px;">${st.id}</td><td style="padding:8px;">${st.name}</td><td style="padding:8px;">${st.phone}</td>
+                        <td style="padding:8px; font-weight:bold; color:#38bdf8;">${st.id}</td>
+                        <td style="padding:8px;">${st.name}</td>
+                        <td style="padding:8px;">${st.phone}</td>
+                        <td style="padding:8px;">${st.grade || '-'}</td>
+                        <td style="padding:8px;">${st.password || '-'}</td>
                         <td style="padding:8px;"><button onclick="deleteStudentRow('${st.id}')" style="background:var(--accent-red); color:#fff; border:none; padding:3px 6px; border-radius:4px;">حذف</button></td>
                     </tr>`;
                 }
@@ -331,7 +363,7 @@
         }
 
         async function deleteStudentRow(id) {
-            if(confirm("هل أنت متأكد من حذف الطالب؟")) {
+            if(confirm(`هل أنت متأكد من حذف الطالب ذو الـ ID: ${id} نهائياً؟`)) {
                 await fetch(`${sheetDBUrl}/id/${id}?sheet=students`, { method: 'DELETE' }).catch(()=>{});
                 localStorage.removeItem(id);
                 loadStudentsList();
