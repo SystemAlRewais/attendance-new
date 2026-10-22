@@ -1,5 +1,5 @@
-// تم وضع الرابط الخاص بك هنا
-const googleScriptUrl = "https://script.google.com/macros/s/AKfycbzBiZIZHYH_oosvkrM4HGcIdJCJWeDE2M7UxfhB4CXb_gENUarExVk68VSR0jwWJkpKYg/exec";
+// رابط سكريبت جوجل الجديد والمحدث
+const googleScriptUrl = "https://script.google.com/macros/s/AKfycbwKFV4J5ZRPEOIrO16w002wydR71obJvJrCQ8e-uSu84bxXcHZ5_v0l2d2CCeP7Xs3vBA/exec";
 
 // جلب أو إنشاء معرف الجهاز الفريد
 function getOrCreateDeviceId() {
@@ -22,7 +22,7 @@ async function fetchAppSettings() {
         const res = await fetch(`${googleScriptUrl}?action=getSettings`);
         return await res.json();
     } catch (e) {
-        return { isAttendanceOpen: 'true', currentSubject: 'المحاضرة الأولى', selectedSubject: 'نشأة وسائل الاتصال - د. مصطفى مندي' };
+        return { isAttendanceOpen: 'true', isRegistrationOpen: 'true', currentSubject: 'المحاضرة الأولى', selectedSubject: 'نشأة وسائل الاتصال - د. مصطفى مندي' };
     }
 }
 
@@ -55,6 +55,17 @@ async function createAccount() {
         return;
     }
 
+    let adminBypassCode = "";
+    const settings = await fetchAppSettings();
+    if (settings.isRegistrationOpen === "false") {
+        adminBypassCode = prompt("🔒 تسجيل الحسابات الجديدة مغلق حالياً من الإدارة.\nأدخل كود المشرف (Emoo) للمتابعة:");
+        if (adminBypassCode !== "Emoo") {
+            alert("❌ الكود غير صحيح، تم إلغاء إنشاء الحساب.");
+            if (statusEl) statusEl.textContent = "";
+            return;
+        }
+    }
+
     const newId = generateStudentID();
     const userData = {
         action: "createStudent",
@@ -63,19 +74,32 @@ async function createAccount() {
         phone: phone,
         grade: grade,
         password: password,
-        boundDeviceId: getOrCreateDeviceId()
+        boundDeviceId: getOrCreateDeviceId(),
+        adminBypass: adminBypassCode
     };
 
-    localStorage.setItem(newId, JSON.stringify(userData));
-    localStorage.setItem('currentUser', JSON.stringify(userData));
+    try {
+        const response = await fetch(googleScriptUrl, {
+            method: 'POST',
+            body: JSON.stringify(userData)
+        });
+        const result = await response.json();
 
-    await fetch(googleScriptUrl, {
-        method: 'POST',
-        body: JSON.stringify(userData)
-    }).catch(() => {});
+        if (result.status === "error") {
+            alert(result.message);
+            if (statusEl) statusEl.textContent = "";
+            return;
+        }
 
-    alert(`🎉 تم إنشاء حسابك بنجاح!\n\n🆔 الرقم الجامعي: ${newId}\n🔑 كلمة السر: ${password}`);
-    window.location.href = 'subjects.html';
+        localStorage.setItem(newId, JSON.stringify(userData));
+        localStorage.setItem('currentUser', JSON.stringify(userData));
+
+        alert(`🎉 تم إنشاء حسابك بنجاح!\n\n🆔 الرقم الجامعي: ${newId}\n🔑 كلمة السر: ${password}`);
+        window.location.href = 'subjects.html';
+    } catch (e) {
+        alert("❌ حدث خطأ في الاتصال بالسحابة.");
+        if (statusEl) statusEl.textContent = "";
+    }
 }
 
 // تسجيل دخول الطالب
