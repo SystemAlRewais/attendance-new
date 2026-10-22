@@ -31,6 +31,7 @@
 
     <script src="script.js"></script>
     <script>
+        // رابط سكريبت جوجل المعتمد الجديد
         const googleScriptUrl = "https://script.google.com/macros/s/AKfycbz-NlvlcVsJ0qi0e1NdAF8OIGtg71bcgj4XG44aRq-8NwvwhKm0IPPZWK2Ib7HI3vm_AA/exec";
 
         const user = JSON.parse(localStorage.getItem('currentUser'));
@@ -140,9 +141,10 @@
                 const lon = position.coords.longitude;
                 const locationLink = `https://maps.google.com/?q=${lat},${lon}`;
 
-                const collegeLat = parseFloat(settings.collegeLat) || 30.057393;
-                const collegeLon = parseFloat(settings.collegeLng) || 31.325608;
-                const allowedRadiusMeters = parseFloat(settings.allowedRadiusMeters) || 500; 
+                // الإحداثيات المعتمدة لمبنى كلية الإعلام جامعة الأزهر ونطاق 500 متر
+                const collegeLat = 30.057393; 
+                const collegeLon = 31.325608; 
+                const allowedRadiusMeters = 500; 
 
                 const distance = calculateDistance(lat, lon, collegeLat, collegeLon);
 
@@ -185,13 +187,4 @@
                 statusMsg.style.color = "var(--accent-green)";
                 statusMsg.textContent = "✅ تم تسجيل حضورك بنجاح!";
                 alert("🎉 تم تسجيل حضورك بنجاح وسُجل في الشيت!");
-                setTimeout(() => { window.location.href = 'subjects.html'; }, 1500);
-
-            } catch (e) {
-                statusMsg.style.color = "var(--accent-red)";
-                statusMsg.textContent = "❌ حدث خطأ أثناء إرسال البيانات.";
-            }
-        }
-    </script>
-</body>
-</html>
+                setTimeout(() => { window.location.href =
