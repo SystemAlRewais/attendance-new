@@ -1,5 +1,5 @@
-// رابط سكريبت جوجل الجديد والمحدث
-const googleScriptUrl = "https://script.google.com/macros/s/AKfycbz-jGjn0balT-8OuTHymn2PbA51M3W-D7wBr4bTkLxxdW0NYJFpfhc8uXgBN0kw6AvTAA/exec";
+// تم وضع الرابط السحابي الجديد هنا
+const googleScriptUrl = "https://script.google.com/macros/s/AKfycbzEV1GmmdHgVFy8f2jmZSQFZmH3_BOBSlMsI6_nsB4EhgJABQv6IxgBVXVBUEHHyXVO-w/exec";
 
 // جلب أو إنشاء معرف الجهاز الفريد
 function getOrCreateDeviceId() {
