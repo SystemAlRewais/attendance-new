@@ -37,9 +37,10 @@
             let subs = JSON.parse(localStorage.getItem('customSubjectsList'));
             if (!subs || !Array.isArray(subs) || subs.length === 0) {
                 subs = [
-                    " نشأه وسائل اتصال د/مصطفي مجموعه اولي",
+                    "نشأه وسائل اتصال د/مصطفي مجموعه اولي",
                     "نشأه وسائل اتصال د/مصطفي مجموعه تانيه",
-                    "القرآن الكريم",
+                    "ماده القرآن الكريم"
+                ];
                 localStorage.setItem('customSubjectsList', JSON.stringify(subs));
             }
             return subs;
