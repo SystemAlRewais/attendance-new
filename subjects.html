@@ -37,11 +37,8 @@
             let subs = JSON.parse(localStorage.getItem('customSubjectsList'));
             if (!subs || !Array.isArray(subs) || subs.length === 0) {
                 subs = [
-                    "نشأة وسائل الاتصال - د. مصطفى مندي",
-                    "رأي عام",
-                    "صحافة استقصائية",
-                    "إذاعة وتلفزيون",
-                    "إعلان وترويج"
+                    " نشأه وسائل اتصال د/مصطفي مجموعه اولي",
+                    "نشأه وسائل اتصال د/مصطفي مجموعه تانيه",
                 ];
                 localStorage.setItem('customSubjectsList', JSON.stringify(subs));
             }
