@@ -31,8 +31,11 @@
 
     <script src="script.js"></script>
     <script>
+        // رابط سكريبت جوجل المحدث والمربوط بالسحابة
+        const googleScriptUrl = "https://script.google.com/macros/s/AKfycbz-jGjn0balT-8OuTHymn2PbA51M3W-D7wBr4bTkLxxdW0NYJFpfhc8uXgBN0kw6AvTAA/exec";
+
         const user = JSON.parse(localStorage.getItem('currentUser'));
-        const subject = localStorage.getItem('selectedSubject');
+        const subject = localStorage.getItem('selectedSubject') || localStorage.getItem('selectedSubjectName');
 
         if(!user) {
             window.location.href = 'index.html';
@@ -45,7 +48,8 @@
 
         async function checkLiveAttendanceStatus() {
             try {
-                const settings = await fetchAppSettings();
+                const res = await fetch(`${googleScriptUrl}?action=getSettings`);
+                const settings = await res.json();
                 if (settings) {
                     const title = settings.currentSubject || "المحاضرة الحالية";
                     document.getElementById('lectureTitleDisplay').textContent = `📌 ${title}`;
@@ -95,8 +99,13 @@
                 return;
             }
 
-            const settings = await fetchAppSettings();
-            if (String(settings.isAttendanceOpen).trim() === 'false') {
+            let settings = {};
+            try {
+                const res = await fetch(`${googleScriptUrl}?action=getSettings`);
+                settings = await res.json();
+            } catch(e) {}
+
+            if (settings && String(settings.isAttendanceOpen).trim() === 'false') {
                 alert("❌ عذراً، الإدارة أغلقت تسجيل الحضور!");
                 return;
             }
@@ -134,15 +143,16 @@
                 const lon = position.coords.longitude;
                 const locationLink = `https://maps.google.com/?q=${lat},${lon}`;
 
-                const collegeLat = 30.0568; 
-                const collegeLon = 31.3145; 
-                const allowedRadiusMeters = 300; 
+                // جلب إحداثيات الكلية والنطاق المسموح من لوحة الإدارة السحابية مباشرة
+                const collegeLat = parseFloat(settings.collegeLat) || 30.057393;
+                const collegeLon = parseFloat(settings.collegeLng) || 31.325608;
+                const allowedRadiusMeters = parseFloat(settings.allowedRadiusMeters) || 500; 
 
                 const distance = calculateDistance(lat, lon, collegeLat, collegeLon);
 
                 if (distance > allowedRadiusMeters) {
                     statusMsg.style.color = "var(--accent-red)";
-                    statusMsg.textContent = `❌ أنت خارج نطاق الكلية (${Math.round(distance)} متر).`;
+                    statusMsg.textContent = `❌ أنت خارج نطاق الكلية (${Math.round(distance)} متر). الحد المسموح: ${allowedRadiusMeters} متر.`;
                     return;
                 }
 
