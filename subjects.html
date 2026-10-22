@@ -13,10 +13,10 @@
         <p id="welcomeStudent" style="color: var(--text-sub); margin-bottom: 25px;"></p>
 
         <div id="subjectsListContainer" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px;">
-            <p style="color: var(--text-sub);">جاري تحميل المواد الدراسية سحابياً...</p>
+            <p style="color: var(--text-sub);">جاري تحميل المواد الدراسية...</p>
         </div>
 
-        <button class="btn btn-secondary" onclick="logout()" style="background: var(--accent-red); margin-top: 10px; width: 100%;">🚪 تسجيل الخروج</button>
+        <button class="btn btn-secondary" onclick="logout()" style="background: var(--accent-red); margin-top: 10px;">🚪 تسجيل الخروج</button>
         
         <div style="margin-top: 25px;">
             <a href="admin.html" style="font-size: 13px; color: var(--text-sub); text-decoration: none;">🔐 لوحة تحكم الإدارة</a>
@@ -25,38 +25,15 @@
 
     <script src="script.js"></script>
     <script>
-        const googleScriptUrl = "https://script.google.com/macros/s/AKfycbz-NlvlcVsJ0qi0e1NdAF8OIGtg71bcgj4XG44aRq-8NwvwhKm0IPPZWK2Ib7HI3vm_AA/exec";
-
         const currentUser = JSON.parse(localStorage.getItem('currentUser'));
         if (!currentUser) {
             window.location.href = 'index.html';
         } else {
-            document.getElementById('welcomeStudent').textContent = `أهلاً بك، ${currentUser.name} | ${currentUser.grade || 'الفرقة الأولى'} (ID: ${currentUser.id})`;
-            loadSubjectsFromCloudOrLocal();
+            document.getElementById('welcomeStudent').textContent = `أهلاً بك، ${currentUser.name} (ID: ${currentUser.id})`;
+            renderSubjectsList();
         }
 
-        async function loadSubjectsFromCloudOrLocal() {
-            const container = document.getElementById('subjectsListContainer');
-            const studentGrade = currentUser.grade || "الفرقة الأولى";
-
-            try {
-                const res = await fetch(`${googleScriptUrl}?action=getSettings`);
-                const settings = await res.json();
-                
-                let gradeSubjects = [];
-                if (settings && settings.subjectsByGrade && settings.subjectsByGrade[studentGrade] && settings.subjectsByGrade[studentGrade].length > 0) {
-                    gradeSubjects = settings.subjectsByGrade[studentGrade];
-                } else {
-                    gradeSubjects = getFallbackSubjects();
-                }
-
-                renderSubjectsList(gradeSubjects);
-            } catch(e) {
-                renderSubjectsList(getFallbackSubjects());
-            }
-        }
-
-        function getFallbackSubjects() {
+        function getSubjects() {
             let subs = JSON.parse(localStorage.getItem('customSubjectsList'));
             if (!subs || !Array.isArray(subs) || subs.length === 0) {
                 subs = [
@@ -71,16 +48,12 @@
             return subs;
         }
 
-        function renderSubjectsList(subjectsArray) {
+        function renderSubjectsList() {
             const container = document.getElementById('subjectsListContainer');
+            const subjects = getSubjects();
             container.innerHTML = "";
 
-            if (!subjectsArray || subjectsArray.length === 0) {
-                container.innerHTML = "<p style='color:var(--text-sub);'>لا توجد مواد مضافة لفرقتك الدراسية حالياً.</p>";
-                return;
-            }
-
-            subjectsArray.forEach(sub => {
+            subjects.forEach(sub => {
                 const btn = document.createElement('button');
                 btn.className = 'btn';
                 btn.style.cssText = 'background: #4f46e5; padding: 15px; font-size: 16px; border: none; cursor: pointer; border-radius: 8px; color: #fff; width: 100%;';
@@ -92,7 +65,6 @@
 
         function selectSubject(subjectName) {
             localStorage.setItem('selectedSubject', subjectName);
-            localStorage.setItem('selectedSubjectName', subjectName);
             window.location.href = 'attendance.html';
         }
 
