@@ -31,11 +31,8 @@
 
     <script src="script.js"></script>
     <script>
-        // رابط سكريبت جوجل المعتمد الجديد
-        const googleScriptUrl = "https://script.google.com/macros/s/AKfycbz-NlvlcVsJ0qi0e1NdAF8OIGtg71bcgj4XG44aRq-8NwvwhKm0IPPZWK2Ib7HI3vm_AA/exec";
-
         const user = JSON.parse(localStorage.getItem('currentUser'));
-        const subject = localStorage.getItem('selectedSubject') || localStorage.getItem('selectedSubjectName');
+        const subject = localStorage.getItem('selectedSubject');
 
         if(!user) {
             window.location.href = 'index.html';
@@ -48,8 +45,7 @@
 
         async function checkLiveAttendanceStatus() {
             try {
-                const res = await fetch(`${googleScriptUrl}?action=getSettings`);
-                const settings = await res.json();
+                const settings = await fetchAppSettings();
                 if (settings) {
                     const title = settings.currentSubject || "المحاضرة الحالية";
                     document.getElementById('lectureTitleDisplay').textContent = `📌 ${title}`;
@@ -64,7 +60,9 @@
                         document.getElementById('statusMsg').textContent = '';
                     }
                 }
-            } catch(e) {}
+            } catch(e) {
+                console.error(e);
+            }
         }
 
         checkLiveAttendanceStatus();
@@ -97,13 +95,8 @@
                 return;
             }
 
-            let settings = {};
-            try {
-                const res = await fetch(`${googleScriptUrl}?action=getSettings`);
-                settings = await res.json();
-            } catch(e) {}
-
-            if (settings && String(settings.isAttendanceOpen).trim() === 'false') {
+            const settings = await fetchAppSettings();
+            if (String(settings.isAttendanceOpen).trim() === 'false') {
                 alert("❌ عذراً، الإدارة أغلقت تسجيل الحضور!");
                 return;
             }
@@ -141,7 +134,7 @@
                 const lon = position.coords.longitude;
                 const locationLink = `https://maps.google.com/?q=${lat},${lon}`;
 
-                // الإحداثيات المعتمدة لمبنى كلية الإعلام جامعة الأزهر ونطاق 500 متر
+                // الإحداثيات المعتمدة لمبنى كلية الإعلام بنين جامعة الأزهر بالقاهرة
                 const collegeLat = 30.057393; 
                 const collegeLon = 31.325608; 
                 const allowedRadiusMeters = 500; 
@@ -187,4 +180,14 @@
                 statusMsg.style.color = "var(--accent-green)";
                 statusMsg.textContent = "✅ تم تسجيل حضورك بنجاح!";
                 alert("🎉 تم تسجيل حضورك بنجاح وسُجل في الشيت!");
-                setTimeout(() => { window.location.href =
+                setTimeout(() => { window.location.href = 'subjects.html'; }, 1500);
+
+            } catch (e) {
+                console.error(e);
+                statusMsg.style.color = "var(--accent-red)";
+                statusMsg.textContent = "❌ حدث خطأ أثناء إرسال البيانات.";
+            }
+        }
+    </script>
+</body>
+</html>
