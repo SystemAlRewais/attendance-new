@@ -31,8 +31,7 @@
 
     <script src="script.js"></script>
     <script>
-        // رابط سكريبت جوجل المحدث والمربوط بالسحابة
-        const googleScriptUrl = "https://script.google.com/macros/s/AKfycbz-jGjn0balT-8OuTHymn2PbA51M3W-D7wBr4bTkLxxdW0NYJFpfhc8uXgBN0kw6AvTAA/exec";
+        const googleScriptUrl = "https://script.google.com/macros/s/AKfycbz-NlvlcVsJ0qi0e1NdAF8OIGtg71bcgj4XG44aRq-8NwvwhKm0IPPZWK2Ib7HI3vm_AA/exec";
 
         const user = JSON.parse(localStorage.getItem('currentUser'));
         const subject = localStorage.getItem('selectedSubject') || localStorage.getItem('selectedSubjectName');
@@ -64,9 +63,7 @@
                         document.getElementById('statusMsg').textContent = '';
                     }
                 }
-            } catch(e) {
-                console.error(e);
-            }
+            } catch(e) {}
         }
 
         checkLiveAttendanceStatus();
@@ -143,7 +140,6 @@
                 const lon = position.coords.longitude;
                 const locationLink = `https://maps.google.com/?q=${lat},${lon}`;
 
-                // جلب إحداثيات الكلية والنطاق المسموح من لوحة الإدارة السحابية مباشرة
                 const collegeLat = parseFloat(settings.collegeLat) || 30.057393;
                 const collegeLon = parseFloat(settings.collegeLng) || 31.325608;
                 const allowedRadiusMeters = parseFloat(settings.allowedRadiusMeters) || 500; 
@@ -192,7 +188,6 @@
                 setTimeout(() => { window.location.href = 'subjects.html'; }, 1500);
 
             } catch (e) {
-                console.error(e);
                 statusMsg.style.color = "var(--accent-red)";
                 statusMsg.textContent = "❌ حدث خطأ أثناء إرسال البيانات.";
             }
