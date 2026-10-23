@@ -143,7 +143,7 @@
 
                 if (distance > allowedRadiusMeters) {
                     statusMsg.style.color = "var(--accent-red)";
-                    statusMsg.textContent = `❌ أنت خارج نطاق الكلية (${Math.round(distance)} متر). الحد المسموح: ${allowedRadiusMeters} متر.`;
+                    statusMsg.textContent = `❌ أنت خارج نطاق الكلية (تبعد مسافة ${Math.round(distance)} متر).`;
                     return;
                 }
 
